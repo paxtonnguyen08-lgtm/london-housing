@@ -48,7 +48,8 @@ On github.com, in your repo:
 1. Go to the **Actions** tab.
 2. Click **Daily scrape** on the left, then **Run workflow → Run workflow**.
 3. Click the run to watch it.
-   - **The first run takes about 30 minutes.** It opens every matching listing once, 10 seconds apart, as the site asks. Later runs take a few minutes.
+   - **A run takes about 3 minutes.** The listings found so far are already saved in `data/`, so each run only opens new listings, 10 seconds apart, as the site asks.
+   - If `data/` is ever emptied, the next run starts from scratch and takes about 30 minutes, because it opens every matching listing once.
    - The summary page of a finished run shows a table of the new listings.
 4. When it's done, the **Code** tab shows a new commit from `github-actions[bot]` like "Update listings: 42 new (2027-…)".
 
@@ -63,7 +64,7 @@ The **Publish website** workflow (`.github/workflows/pages.yml`) puts `site/` an
 3. Go to **Actions → Publish website → Run workflow → Run workflow**. It takes about a minute.
 4. Open the finished run. The **publish** box shows your link: `https://<your-username>.github.io/london-housing/`.
 5. Open that link on your phone and check that you see real listings, not the sample ones.
-   - If the daily scrape hasn't finished its first run yet, you'll see sample listings until it does. The site republishes itself right after each scrape.
+   - The listings already saved in `data/` show right away. The site republishes itself after each daily scrape, so it never needs this button again.
    - Then pin the link in your group chat.
 
 The website is public, like the repo, but it holds nothing private: listings and the first names in `site/js/config.js`. Votes and notes will live in Supabase behind your group code (Phase 2).
@@ -100,7 +101,7 @@ Secrets stay hidden. Even you can't view them again after saving, and they never
 **6. Check it.** Go to **Actions → Daily scrape → Run workflow**.
 - If there are new houses, check everyone's inbox, **and the spam folder the first time**. Mark it "Not spam" once and later emails land in the inbox.
 - If nothing is new that run, the email step's log says "No new houses this run, so no email". The next new house will trigger one.
-- **The very first scrape finds everything at once.** If the secrets are in before that run, the first email lists the 15 cheapest houses, plus "And N more on the group page".
+- The email only covers houses that are new since the last run. Everything already saved in `data/` counts as seen, so the first email arrives the next time a new house shows up. If a run ever finds more than 15 at once, the email lists the 15 cheapest plus "And N more on the group page".
 
 **If it goes wrong:**
 - The email step turns orange (warning), but the scrape and the website carry on as normal. A mail problem never blocks them.

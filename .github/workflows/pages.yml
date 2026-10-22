@@ -37,19 +37,19 @@ jobs:
       url: ${{ steps.deploy.outputs.page_url }}
     steps:
       - name: Get the code (including the scrape's latest data)
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Assemble the site
         run: bash .github/scripts/build_site.sh _site
 
       - name: Set up Pages
-        uses: actions/configure-pages@v5
+        uses: actions/configure-pages@v6
 
       - name: Upload the site
-        uses: actions/upload-pages-artifact@v3
+        uses: actions/upload-pages-artifact@v5
         with:
           path: _site
 
       - name: Publish
         id: deploy
-        uses: actions/deploy-pages@v4
+        uses: actions/deploy-pages@v5

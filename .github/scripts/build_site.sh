@@ -21,8 +21,8 @@ else
   echo "No data/listings.json yet; the site will show sample listings."
 fi
 
-# Tell GitHub Pages to serve files as-is (no Jekyll processing)
-touch "$OUT/.nojekyll"
+# No .nojekyll needed: publishing through GitHub Actions never runs Jekyll, and
+# upload-pages-artifact (v4+) leaves out hidden files anyway.
 
 echo "Built $OUT:"
 (cd "$OUT" && find . -type f | sort)

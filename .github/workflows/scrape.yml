@@ -19,13 +19,13 @@ concurrency:
 jobs:
   scrape:
     runs-on: ubuntu-latest
-    timeout-minutes: 90 # the very first run opens every listing once (10 s apart)
+    timeout-minutes: 90 # normally ~3 min; ~30 min if data/ is ever emptied (opens every listing, 10 s apart)
     steps:
       - name: Get the code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Set up Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v7
         with:
           python-version: "3.12"
           cache: pip
