@@ -65,6 +65,9 @@ alter table notes enable row level security;
 alter table listing_status enable row level security;
 alter table push_subs enable row level security;
 revoke all on settings, members, votes, notes, listing_status, push_subs from public, anon, authenticated;
+-- The daily GitHub job (secret key = service_role) reads push_subs: to keep the free project
+-- awake, and later to send phone alerts. Needed when "Automatically expose new tables" is off.
+grant select on push_subs to service_role;
 
 -- ---------- helpers (not callable from the page) ----------
 

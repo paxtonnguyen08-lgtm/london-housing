@@ -14,7 +14,7 @@ const KEY = "western_och:63747";
 async function fresh() {
   const db = new PGlite();
   // Supabase creates these roles itself; a plain Postgres needs them made first.
-  await db.exec("create role anon nologin; create role authenticated nologin;");
+  await db.exec("create role anon nologin; create role authenticated nologin; create role service_role nologin bypassrls;");
   await db.exec(SCHEMA);
   await db.query("select setup_group($1, $2)", [CODE, MEMBERS]);
   return db;
@@ -166,4 +166,16 @@ test("setup_group: short codes refused; re-running changes the code but keeps vo
   const s = await state(db, "brand-new-code-2027");
   assert.deepEqual(s.votes, { [KEY]: { Maya: "like" } });
   assert.deepEqual(s.members, [...MEMBERS, "Alex"]);
+});
+
+test("the daily job's secret key can read push_subs (keep-alive), but no other table", async () => {
+  const db = await fresh();
+  await db.exec("set role service_role");
+  try {
+    const r = await db.query("select endpoint from push_subs limit 1");
+    assert.equal(r.rows.length, 0);
+    await assert.rejects(db.query("select * from votes"), /permission denied/);
+  } finally {
+    await db.exec("reset role");
+  }
 });
