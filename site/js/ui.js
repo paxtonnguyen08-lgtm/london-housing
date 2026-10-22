@@ -135,6 +135,13 @@ export function alsoListed(l) {
     `<a href="${esc(a.url)}" target="_blank" rel="noopener noreferrer" style="color:inherit">${esc(sourceName(a.source))} <i class="ti ti-external-link" aria-hidden="true"></i></a>`).join(", ")}</p>`;
 }
 
+// "Why suggested" chips from recommend.js: [{ text, tone: "good" | "warn" | "" }]
+export function reasonChips(reasons) {
+  if (!reasons?.length) return "";
+  const tone = (t) => (t === "good" || t === "warn" ? t : "");
+  return `<div class="chips reasons">${reasons.map((r) => `<span class="chip ${tone(r.tone)}">${esc(r.text)}</span>`).join("")}</div>`;
+}
+
 export function bulletList(l) {
   const hi = (l.highlights || []).map((t) => `<li><i class="ti ti-circle-check good" aria-hidden="true"></i>${esc(t)}</li>`);
   const hu = (l.heads_up || []).map((t) => `<li><i class="ti ti-alert-circle warn" aria-hidden="true"></i>${esc(t)}</li>`);

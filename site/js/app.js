@@ -4,11 +4,13 @@ import { Voting } from "./voting.js";
 import { GroupError, SupabaseGroupStore } from "./supabase-store.js";
 import {
   DEFAULT_FILTERS, STATUSES, budgetLabel, STATUS_LABELS, deckFor, filterListings, groupSummary, initials, isMatch,
-  money, parseJoinHash, shareText, shortlist, sortListings, statusOf, votesFor, walkLabel, formatDate, costOf,
+  money, parseInviteInput, parseJoinHash, shareText, shortlist, sortListings, statusOf, votesFor, walkLabel, formatDate, costOf,
 } from "./logic.js";
+import { MIN_VOTES, budgetCheck, groupProfile, readiness, suggest } from "./recommend.js";
 import { Deck } from "./swipe.js";
 import {
-  alsoListed, bulletList, dots, esc, num, safeUrl, factsGrid, fitLine, isNewFor, listRow, photoClass, photoInner, photoStyle, priceNote, voteAvatars,
+  alsoListed, bulletList, dots, esc, num, safeUrl, factsGrid, fitLine, isNewFor, listRow, photoClass, photoInner, photoStyle, priceNote,
+  reasonChips, voteAvatars,
 } from "./ui.js";
 
 const $ = (id) => document.getElementById(id);
@@ -25,6 +27,8 @@ const app = {
   filters: { ...DEFAULT_FILTERS, ...prefs.get("filters", {}) },
   sort: prefs.get("sort", "cost"),
   tab: prefs.get("tab", "discover"),
+  order: prefs.get("order", "suggested"), // the deck's order: "suggested" (once unlocked) or "newest"
+  why: {}, // "why suggested" reasons for each card in the deck, by house key
   seen: null, // houses that were already here on my previous visit (null on a first visit)
   detailKey: null,
 };
@@ -147,9 +151,11 @@ function cardBack(l) {
     likes.length ? `${likes.map(esc).join(", ")} liked it` : "",
     passes.length ? `${passes.map(esc).join(", ")} passed` : "",
   ].filter(Boolean).join(" · ") || "Nobody has voted yet";
+  const why = app.why[l.key];
   return `
     <div class="card-back">
       <div><div class="muted small">Rundown</div><div class="serif" style="font-size:30px;line-height:1.15">${esc(l.title)}</div></div>
+      ${why?.length ? `<div><div class="muted small"><i class="ti ti-sparkles" aria-hidden="true"></i> Why suggested</div>${reasonChips(why)}</div>` : ""}
       ${bulletList(l)}
       <div class="muted small">${esc(l.neighbourhood || "")}${l.lease_term_months ? ` · ${num(l.lease_term_months)}-month lease` : ""} · utilities ${esc({ yes: "included", no: "extra", unknown: "not stated" }[l.utilities_included])}${l.amenities?.length ? `<br>${l.amenities.map(esc).join(" · ")}` : ""}</div>
       <div class="small">${who}</div>
@@ -167,6 +173,38 @@ const deck = new Deck($("deck"), {
   onVote: (l, vote) => castVote(l, vote, { fromDeck: true }),
 });
 
+// Who still needs to vote before suggestions unlock, as a short line for the pill and a longer one for the toast.
+function lockedText(ready) {
+  const mine = ready.needs.find((n) => n.member === app.me);
+  const others = ready.needs.filter((n) => n.member !== app.me);
+  if (mine) {
+    return {
+      short: `${mine.more} more vote${mine.more === 1 ? "" : "s"} to unlock suggestions`,
+      long: `Vote on ${mine.more} more house${mine.more === 1 ? "" : "s"} to unlock suggestions.${others.length ? ` ${others.map((n) => n.member).join(", ")} still need${others.length === 1 ? "s" : ""} to vote too.` : ""}`,
+    };
+  }
+  return {
+    short: `Suggestions: waiting on ${others.length === 1 ? others[0].member : `${others.length} friends`}`,
+    long: `Suggestions unlock once everyone has ${MIN_VOTES} votes. Waiting on ${others.map((n) => `${n.member} (${n.more} more)`).join(", ")}.`,
+  };
+}
+
+function orderPill(ready, suggested) {
+  const pill = (icon, text) => `<button class="pill" type="button" data-order><i class="ti ti-${icon}" aria-hidden="true"></i> ${esc(text)}</button>`;
+  if (!ready.ready) return pill("lock", lockedText(ready).short);
+  return suggested ? pill("sparkles", "Suggested for us") : pill("clock", "Newest first");
+}
+
+function toggleOrder() {
+  const ready = readiness(store.state, members);
+  if (!ready.ready) return toast(lockedText(ready).long);
+  app.order = app.order === "suggested" ? "newest" : "suggested";
+  prefs.set("order", app.order);
+  deck.show([]); // start the deck over in the new order
+  render();
+  toast(app.order === "suggested" ? "Best fits for the whole group first" : "Newest houses first");
+}
+
 function renderDiscover() {
   filterPills("discover-pills");
   if (!app.me) {
@@ -174,7 +212,20 @@ function renderDiscover() {
     $("deck").innerHTML = '<div class="empty"><span class="serif">Pick your name</span>Then start swiping.</div>';
     return;
   }
-  const items = deckFor(app.listings, store.state, app.me, app.filters);
+  const ready = readiness(store.state, members);
+  const suggested = app.order === "suggested" && ready.ready;
+  $("discover-pills").firstElementChild.insertAdjacentHTML("afterend", orderPill(ready, suggested));
+  let items = deckFor(app.listings, store.state, app.me, app.filters);
+  app.why = {};
+  if (suggested) {
+    const ranked = suggest(items, app.listings, store.state, members);
+    app.why = Object.fromEntries(ranked.map((r) => [r.listing.key, r.reasons]));
+    items = ranked.map((r) => r.listing);
+    // Every vote re-ranks the deck. Don't swap the card I'm looking at (or the one peeking out
+    // under it, which comes next after a swipe): the first card from the current deck stays on top.
+    const keep = deck.items.find((x) => items.some((l) => l.key === x.key));
+    if (keep) items = [keep, ...items.filter((l) => l.key !== keep.key)];
+  }
   if (deck.top?.key !== items[0]?.key || deck.items.length !== items.length) deck.show(items);
   // At the end of the deck only Undo stays, so the last swipe can still be taken back on a phone
   $("deck-actions").hidden = !items.length && !voting.canUndo;
@@ -283,6 +334,34 @@ function renderHome() {
 
 // ---------- Group ----------
 
+// Budget reality check: what each person said vs the prices they've actually liked.
+function budgetReality() {
+  const check = budgetCheck(app.listings, store.state, members);
+  const profile = groupProfile(app.listings, store.state, members);
+  const lo = 700, hi = 1400; // same scale as the Home tab's range bar
+  const pct = (v) => Math.max(0, Math.min(100, ((v - lo) / (hi - lo)) * 100));
+  const bar = (r, stated) => `<div class="range mini"><div class="range-track">
+      <div class="range-band" style="left:${pct(r.low)}%;width:${Math.max(2, pct(r.high) - pct(r.low))}%"></div>
+      ${stated ? `<div class="range-mark" style="left:${pct(stated)}%"></div>` : ""}
+    </div></div>`;
+  const spot = check.sweetSpot;
+  return `
+    <div class="section-head"><h2>Budget reality check</h2></div>
+    <p class="muted small" style="margin-top:4px">What each of you said vs what you've actually liked. The bar is the price range of your likes; the tick is your budget.</p>
+    <div class="stats two">
+      <div class="stat"><div class="muted tiny">Realistic ceiling</div><span class="serif money">${check.ceiling ? money(check.ceiling) : "–"}</span><div class="faint tiny">${check.ceilingBy.length ? `Lowest budget: ${esc(check.ceilingBy.join(", "))}` : "Set budgets above"}</div></div>
+      <div class="stat"><div class="muted tiny">Group sweet spot</div><span class="serif money">${spot ? money(spot.median) : "–"}</span><div class="faint tiny">${spot ? `Most likes: ${money(spot.low)}–${money(spot.high)}` : "Needs 3 likes"}</div></div>
+    </div>
+    ${check.flags.map((f) => `<div class="banner warn"><i class="ti ti-alert-triangle" aria-hidden="true"></i> The sweet spot is ${money(f.by)} over ${esc(f.member)}'s budget of ${money(f.budget)}. Worth talking about before you book viewings.</div>`).join("")}
+    <div>
+      ${check.people.map((p) => `<div class="group-row top">
+          <span class="avatar">${esc(initials(p.member))}</span>
+          <span style="flex:1;min-width:0"><span style="display:block;font-weight:500">${esc(p.member)}</span><span class="muted small ${p.revealed?.over ? "warn" : ""}">${esc(p.line)}</span>${p.revealed ? bar(p.revealed, p.stated) : ""}</span>
+        </div>`).join("")}
+    </div>
+    ${profile.summary ? `<p class="muted small"><i class="ti ti-sparkles" aria-hidden="true"></i> Your likes so far: <b>${esc(profile.summary)}</b></p>` : ""}`;
+}
+
 function renderGroup() {
   const code = prefs.get("code");
   const invite = code ? `${location.origin}${location.pathname}#join=${code}` : null;
@@ -304,12 +383,17 @@ function renderGroup() {
         </div>`;
       }).join("")}
     </div>
+    ${budgetReality()}
 
     <div class="section-head"><h2>Invite your group</h2></div>
     ${invite
       ? `<div class="invite"><code>${esc(invite)}</code><button class="pill" type="button" id="copy-invite">Copy</button></div>
          <p class="muted small">Paste this in your group chat. Tapping it opens the app and joins your group.</p>`
       : '<p class="muted small">Your invite link appears here once the group code is set up (it comes with the database step).</p>'}
+
+    <div class="section-head"><h2>${code ? "Switch groups" : "Join with a link"}</h2></div>
+    <p class="muted small" style="margin-top:4px">${code ? "Paste another group's invite link to switch." : "Paste the invite link from your group chat."} On iPhone, if you added this to your Home Screen, tapping the link opens Safari instead, so paste it here.</p>
+    ${joinForm()}
 
     <div class="section-head"><h2>Add to Home Screen</h2></div>
     <p class="muted small" style="margin-top:4px">On iPhone: tap <i class="ti ti-share" aria-hidden="true"></i> Share in Safari, then <b>Add to Home Screen</b>. It opens like an app, and later that's how alerts reach your phone.</p>
@@ -465,6 +549,39 @@ function handleJoinLink() {
   return true;
 }
 
+// An iPhone Home Screen app keeps its own storage, separate from Safari, and opens without the
+// #join= part. Tapping the invite link in the group chat opens Safari, so the app can never join
+// that way. Pasting the link (or just the code) here works everywhere.
+function joinForm() {
+  return `<form class="join-form" data-join-form>
+      <input name="invite" placeholder="Paste invite link" aria-label="Invite link or code" autocomplete="off" autocapitalize="none" autocorrect="off" spellcheck="false" enterkeyhint="go">
+      <button class="btn btn-ink" type="submit" style="padding:9px 16px">Join</button>
+    </form>
+    <div class="field-error" data-join-error></div>`;
+}
+
+async function joinWithInvite(form) {
+  const error = form.parentElement.querySelector("[data-join-error]");
+  const code = parseInviteInput(form.elements.invite.value);
+  if (!code) {
+    error.textContent = "That's not an invite link. Copy the whole link from your group chat (it ends in #join=…).";
+    return;
+  }
+  // Check the code before saving it, so a typo can't knock you out of a group you're already in
+  const button = form.querySelector("button");
+  button.disabled = true;
+  try {
+    const sb = CONFIG.supabase;
+    if (sb?.url && sb?.anonKey) await new SupabaseGroupStore({ ...sb, code }).load();
+  } catch (err) {
+    error.textContent = err.message; // e.g. "This invite link isn't valid. Ask your group for a new one."
+    button.disabled = false;
+    return;
+  }
+  prefs.set("code", code);
+  location.reload();
+}
+
 // ---------- events ----------
 
 function bindEvents() {
@@ -474,11 +591,12 @@ function bindEvents() {
   });
 
   document.addEventListener("click", (e) => {
-    const t = e.target.closest("[data-open],[data-share],[data-filters],[data-tab-go],[data-scroll],[data-close],[data-me]");
+    const t = e.target.closest("[data-open],[data-share],[data-filters],[data-order],[data-tab-go],[data-scroll],[data-close],[data-me]");
     if (!t) return;
     if (t.dataset.open !== undefined) openDetail(t.dataset.open);
     else if (t.dataset.share !== undefined) share(t.dataset.share);
     else if (t.dataset.filters !== undefined) openFilters();
+    else if (t.dataset.order !== undefined) toggleOrder();
     else if (t.dataset.tabGo) setTab(t.dataset.tabGo);
     else if (t.dataset.scroll) $(t.dataset.scroll).scrollIntoView({ behavior: "smooth" });
     else if (t.dataset.close !== undefined) t.closest("dialog")?.close();
@@ -559,6 +677,18 @@ function bindEvents() {
   });
   $("detail-sheet").addEventListener("close", () => (app.detailKey = null));
 
+  // Paste-to-join, in the banner and on the Group tab
+  document.addEventListener("submit", (e) => {
+    const form = e.target.closest("[data-join-form]");
+    if (!form) return;
+    e.preventDefault();
+    joinWithInvite(form);
+  });
+  document.addEventListener("input", (e) => {
+    const form = e.target.closest("[data-join-form]");
+    if (form) form.parentElement.querySelector("[data-join-error]").textContent = "";
+  });
+
   // Group tab
   $("group").addEventListener("submit", (e) => {
     if (e.target.id === "budget-form") saveBudget(e);
@@ -632,18 +762,19 @@ async function connectStore() {
       shared.startPolling();
       return shared;
     } catch (err) {
-      showGroupBanner(`${err.message} Votes are saved on this phone only for now.`);
+      // A bad code gets the paste box too, so a fresh link from the group can replace it
+      showGroupBanner(`${err.message} Votes are saved on this phone only for now.`, { join: /bad group code/i.test(err.raw || "") });
     }
   } else if (sb?.url && !code) {
-    showGroupBanner("Open the invite link from your group chat to join your group. Until then, votes stay on this phone.");
+    showGroupBanner("To join your group, open the invite link from your group chat or paste it here. Until then, votes stay on this phone.", { join: true });
   }
   const local = new LocalGroupStore();
   await local.load();
   return local;
 }
 
-function showGroupBanner(text) {
-  $("group-banner").textContent = text;
+function showGroupBanner(text, { join = false } = {}) {
+  $("group-banner").innerHTML = `<div>${esc(text)}</div>${join ? joinForm() : ""}`;
   $("group-banner").hidden = false;
 }
 

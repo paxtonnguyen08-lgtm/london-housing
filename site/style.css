@@ -313,8 +313,9 @@ dialog.sheet::backdrop { background: rgba(0, 0, 0, 0.45); }
 .sheet h3 { font-size: 15px; font-weight: 500; margin: 18px 0 6px; }
 .seg { display: flex; flex-wrap: wrap; gap: 6px; }
 .note { padding: 8px 0; border-top: 0.5px solid var(--line); font-size: 14px; display: flex; gap: 10px; }
-.note-form { display: flex; gap: 8px; margin-top: 8px; }
-.note-form input {
+.note-form, .join-form { display: flex; gap: 8px; margin-top: 8px; }
+.note-form input, .join-form input {
+  min-width: 0;
   flex: 1; border: 0.5px solid var(--line-2); border-radius: 999px; padding: 9px 14px; background: transparent;
 }
 .field-error { color: var(--bad); font-size: 13px; min-height: 18px; margin-top: 4px; }
@@ -363,6 +364,15 @@ dialog.sheet::backdrop { background: rgba(0, 0, 0, 0.45); }
 .budget-input { width: 110px; border: 0.5px solid var(--line-2); border-radius: 999px; padding: 7px 12px; background: transparent; text-align: right; }
 .invite { display: flex; gap: 8px; align-items: center; background: var(--bg-2); border-radius: 14px; padding: 10px 12px; font-size: 13px; }
 .invite code { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 12px; }
+
+/* Why suggested, and the budget reality check */
+.chips.reasons { margin-top: 6px; }
+.chips.reasons .chip { white-space: normal; }
+.banner.warn { background: var(--warn-bg); color: var(--warn); }
+.stats.two { grid-template-columns: repeat(2, minmax(0, 1fr)); margin: 12px 0; }
+.stat .money { display: block; font-size: 30px; line-height: 1.15; }
+.group-row.top { align-items: flex-start; }
+.range.mini { margin: 8px 0 2px; }
 
 /* Short phones (iPhone SE, mini): tighten Discover so the whole card fits */
 @media (max-height: 740px) {

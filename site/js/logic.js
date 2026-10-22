@@ -138,15 +138,16 @@ export function budgetFit(l, budget) {
   };
 }
 
-function percentile(sorted, p) {
+// p-th percentile (0–1) of an already sorted list, rounded to a whole number.
+export function percentile(sorted, p) {
   if (!sorted.length) return null;
   const i = (sorted.length - 1) * p;
   const lo = Math.floor(i), hi = Math.ceil(i);
   return Math.round(sorted[lo] + (sorted[hi] - sorted[lo]) * (i - lo));
 }
 
-// Home tab numbers. Sweet spot = middle half of the prices people liked (needs 3+ likes).
-export function groupSummary(listings, state, members, budgets, f = DEFAULT_FILTERS) {
+// Every like's cost per person, sorted (a house two people liked counts twice).
+function likedCostsOf(listings, state) {
   const byKey = Object.fromEntries(listings.map((l) => [l.key, l]));
   const likedCosts = [];
   for (const [key, v] of Object.entries(state.votes)) {
@@ -154,12 +155,23 @@ export function groupSummary(listings, state, members, budgets, f = DEFAULT_FILT
     if (!l || costOf(l) === null) continue;
     for (const m of Object.keys(v)) if (v[m] === "like") likedCosts.push(costOf(l));
   }
-  likedCosts.sort((a, b) => a - b);
-  const known = members.map((m) => budgets[m]).filter((b) => typeof b === "number" && b > 0);
-  const ceiling = known.length ? Math.min(...known) : null;
-  const sweetSpot = likedCosts.length >= 3
+  return likedCosts.sort((a, b) => a - b);
+}
+
+// Sweet spot = middle half of the prices people liked (needs 3+ likes), or null.
+export function sweetSpotOf(listings, state) {
+  const likedCosts = likedCostsOf(listings, state);
+  return likedCosts.length >= 3
     ? { low: percentile(likedCosts, 0.25), median: percentile(likedCosts, 0.5), high: percentile(likedCosts, 0.75) }
     : null;
+}
+
+// Home tab numbers.
+export function groupSummary(listings, state, members, budgets, f = DEFAULT_FILTERS) {
+  const likedCosts = likedCostsOf(listings, state);
+  const known = members.map((m) => budgets[m]).filter((b) => typeof b === "number" && b > 0);
+  const ceiling = known.length ? Math.min(...known) : null;
+  const sweetSpot = sweetSpotOf(listings, state);
   const viewings = listings.filter((l) => statusOf(state, l.key) === "viewing").length;
   return {
     ceiling,
@@ -175,6 +187,20 @@ export function groupSummary(listings, state, members, budgets, f = DEFAULT_FILT
 export function parseJoinHash(hash) {
   const m = /(?:^#|&)join=([A-Za-z0-9_-]{4,64})/.exec(hash || "");
   return m ? m[1] : null;
+}
+
+// What someone pasted to join: the whole invite link (even inside a longer message) or just the
+// code. Returns the code, or null if there isn't one (a link without #join=, say).
+export function parseInviteInput(text) {
+  const t = String(text ?? "").trim();
+  if (t.includes("#")) {
+    for (const part of t.split("#").slice(1)) {
+      const code = parseJoinHash(`#${part}`);
+      if (code) return code;
+    }
+    return null;
+  }
+  return /^[A-Za-z0-9_-]{4,64}$/.test(t) ? t : null;
 }
 
 export function shareText(l) {

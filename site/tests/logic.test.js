@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import {
   DEFAULT_FILTERS, budgetFit, costOf, deckFor, filterListings, groupSummary, initials, isMatch,
-  money, parseJoinHash, passesFilters, shareText, shortlist, sortListings, statusOf, votesFor, walkLabel, walkOf,
+  money, parseInviteInput, parseJoinHash, passesFilters, shareText, shortlist, sortListings, statusOf, votesFor, walkLabel, walkOf,
 } from "../js/logic.js";
 
 const { listings } = JSON.parse(readFileSync(new URL("../sample-listings.json", import.meta.url)));
@@ -141,6 +141,27 @@ test("join link parsing", () => {
   assert.equal(parseJoinHash("#join=a"), null); // too short
   assert.equal(parseJoinHash("#join=<script>"), null);
   assert.equal(parseJoinHash(""), null);
+});
+
+test("pasted invite: full link, bare code, extra whitespace, or a link inside a message", () => {
+  const link = "https://example.github.io/london-housing/#join=hunt-2027";
+  assert.equal(parseInviteInput(link), "hunt-2027");
+  assert.equal(parseInviteInput("hunt-2027"), "hunt-2027");
+  assert.equal(parseInviteInput(`  ${link}\n`), "hunt-2027");
+  assert.equal(parseInviteInput("\t hunt-2027 \n"), "hunt-2027");
+  assert.equal(parseInviteInput(`#1 house hunt! Join here: ${link} 🏠`), "hunt-2027");
+  assert.equal(parseInviteInput("https://example.github.io/london-housing/#x=1&join=ABCD"), "ABCD");
+});
+
+test("pasted invite: anything without a code is an error (null)", () => {
+  assert.equal(parseInviteInput("https://example.github.io/london-housing/"), null, "link without #join");
+  assert.equal(parseInviteInput("https://example.github.io/london-housing/#tab=home"), null);
+  assert.equal(parseInviteInput("https://example.github.io/london-housing/#join=a"), null, "code too short");
+  assert.equal(parseInviteInput("hunt 2027"), null, "spaces inside");
+  assert.equal(parseInviteInput("<script>"), null);
+  assert.equal(parseInviteInput(""), null);
+  assert.equal(parseInviteInput("   "), null);
+  assert.equal(parseInviteInput(null), null);
 });
 
 test("share text is one tidy line", () => {

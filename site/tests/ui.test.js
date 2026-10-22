@@ -1,7 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import {
-  alsoListed, bulletList, esc, factsGrid, isNewFor, listRow, pastel, photoStyle, priceNote, sourceName,
+  alsoListed, bulletList, esc, factsGrid, isNewFor, listRow, pastel, photoStyle, priceNote, reasonChips, sourceName,
 } from "../js/ui.js";
 
 const empty = { votes: {}, notes: {}, status: {}, budgets: {} };
@@ -30,6 +30,17 @@ test("only https photo URLs are used", () => {
   assert.doesNotMatch(photoStyle({ ...base, images: ["javascript:alert(1)"] }), /url\(/);
   assert.doesNotMatch(photoStyle({ ...base, images: ["http://insecure.example/a.jpg"] }), /url\(/);
   assert.match(photoStyle(base), /background-color/);
+});
+
+test("why-suggested chips escape house titles and only use known tones", () => {
+  assert.equal(reasonChips([]), "");
+  const html = reasonChips([
+    { text: "Similar to <b>1 Evil St</b> (2 liked)", tone: "" },
+    { text: "$50 over Jack's budget", tone: "warn" },
+    { text: "x", tone: '"><script>' },
+  ]);
+  assert.ok(!html.includes("<b>") && !html.includes("<script>"));
+  assert.match(html, /class="chip warn">\$50 over Jack&#39;s budget/);
 });
 
 test("placeholder colour is stable for the same house", () => {
