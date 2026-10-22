@@ -1,5 +1,5 @@
 {
-  "last_run": "2026-10-22T16:43:03+00:00",
+  "last_run": "2026-10-22T22:36:49+00:00",
   "listings": [
     {
       "source": "western_och",
@@ -7170,64 +7170,6 @@
     },
     {
       "source": "western_och",
-      "source_id": "63688",
-      "url": "https://offcampus.uwo.ca/Listings/Details/63688",
-      "title": "1570 Richmond street",
-      "address": "1570 Richmond street, London, ON",
-      "neighbourhood": "North London",
-      "housing_type": "House",
-      "bedrooms": 4,
-      "baths": 3.0,
-      "price": 895,
-      "price_basis": "per_room",
-      "price_assumed": false,
-      "total_rent": 3580,
-      "price_per_person": 895,
-      "utilities_included": "no",
-      "est_cost_per_person": 995,
-      "lease_start": "2027-05-01",
-      "lease_term_months": 12,
-      "furnished": null,
-      "amenities": [
-        "A/C",
-        "Transit",
-        "Laundry",
-        "Dishwasher",
-        "Parking(3)"
-      ],
-      "distance_km": 1.38,
-      "site_distance_km": 1.6,
-      "lat": 43.020184,
-      "lng": -81.278558,
-      "geo_precision": "house",
-      "walk_min_campus": 22,
-      "walk_min_huron": 20,
-      "images": [
-        "https://offcampus.uwo.ca/assets/listing_images/63688-1.jpg",
-        "https://offcampus.uwo.ca/assets/listing_images/63688-2.jpg",
-        "https://offcampus.uwo.ca/assets/listing_images/63688-3.jpg",
-        "https://offcampus.uwo.ca/assets/listing_images/63688-4.jpg",
-        "https://offcampus.uwo.ca/assets/listing_images/63688-5.jpg",
-        "https://offcampus.uwo.ca/assets/listing_images/63688-6.jpg"
-      ],
-      "highlights": [
-        "3 bathrooms",
-        "Parking",
-        "Laundry",
-        "Dishwasher"
-      ],
-      "heads_up": [
-        "Utilities extra (about $100/person)"
-      ],
-      "key": "western_och:63688",
-      "last_seen": "2026-10-22",
-      "active": true,
-      "also_listed": [],
-      "first_seen": "2026-10-22",
-      "is_new": false
-    },
-    {
-      "source": "western_och",
       "source_id": "63689",
       "url": "https://offcampus.uwo.ca/Listings/Details/63689",
       "title": "140 Mill Street",
@@ -8088,6 +8030,64 @@
       "key": "western_och:63747",
       "last_seen": "2026-10-22",
       "active": true,
+      "also_listed": [],
+      "first_seen": "2026-10-22",
+      "is_new": false
+    },
+    {
+      "source": "western_och",
+      "source_id": "63688",
+      "url": "https://offcampus.uwo.ca/Listings/Details/63688",
+      "title": "1570 Richmond street",
+      "address": "1570 Richmond street, London, ON",
+      "neighbourhood": "North London",
+      "housing_type": "House",
+      "bedrooms": 4,
+      "baths": 3.0,
+      "price": 895,
+      "price_basis": "per_room",
+      "price_assumed": false,
+      "total_rent": 3580,
+      "price_per_person": 895,
+      "utilities_included": "no",
+      "est_cost_per_person": 995,
+      "lease_start": "2027-05-01",
+      "lease_term_months": 12,
+      "furnished": null,
+      "amenities": [
+        "A/C",
+        "Transit",
+        "Laundry",
+        "Dishwasher",
+        "Parking(3)"
+      ],
+      "distance_km": 1.38,
+      "site_distance_km": 1.6,
+      "lat": 43.020184,
+      "lng": -81.278558,
+      "geo_precision": "house",
+      "walk_min_campus": 22,
+      "walk_min_huron": 20,
+      "images": [
+        "https://offcampus.uwo.ca/assets/listing_images/63688-1.jpg",
+        "https://offcampus.uwo.ca/assets/listing_images/63688-2.jpg",
+        "https://offcampus.uwo.ca/assets/listing_images/63688-3.jpg",
+        "https://offcampus.uwo.ca/assets/listing_images/63688-4.jpg",
+        "https://offcampus.uwo.ca/assets/listing_images/63688-5.jpg",
+        "https://offcampus.uwo.ca/assets/listing_images/63688-6.jpg"
+      ],
+      "highlights": [
+        "3 bathrooms",
+        "Parking",
+        "Laundry",
+        "Dishwasher"
+      ],
+      "heads_up": [
+        "Utilities extra (about $100/person)"
+      ],
+      "key": "western_och:63688",
+      "last_seen": "2026-10-22",
+      "active": false,
       "also_listed": [],
       "first_seen": "2026-10-22",
       "is_new": false
