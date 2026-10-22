@@ -1,0 +1,183 @@
+<form action="/Listings/SearchListings" class="search_listings_form" method="post">
+<input checked="checked" class="desc_hidden" data-val="true" data-val-required="The Desc field is required." hidden="" id="Desc" name="Desc" type="checkbox" value="true"/>
+<input class="sort_hidden" hidden="" id="Sort" name="Sort" type="text" value=""/>
+<input class="page_number_hidden" data-val="true" data-val-required="The PageNumber field is required." hidden="" id="PageNumber" name="PageNumber" type="number" value="0"/>
+<input class="request-type" data-val="true" data-val-required="The requestType field is required." hidden="" id="requestType" name="requestType" type="text" value="Normal"/>
+<div id="main-search">
+<div class="grds">
+<div class="grd-2">
+<div class="rent-prices">
+<div class="floatleft">
+<div class="dollar-holder">Min. $</div>
+<input class="rent_input" data-val="true" data-val-required="The Min Rent field is required." id="MinimumRent" name="MinimumRent" type="text" value="0"/>
+</div>
+<div class="floatright">
+<div class="dollar-holder">Max. $</div>
+<input class="rent_input" data-val="true" data-val-required="The Max Rent field is required." id="MaximumRent" name="MaximumRent" type="text" value="7000"/>
+</div>
+</div>
+<div class="clearfix"> </div>
+<div class="flexit">
+<div class="bedrooms_input">
+<label for="NumberOfBedrooms">Bedrooms</label><br/>
+<select id="NumberOfBedrooms" name="NumberOfBedrooms"><option selected="selected" value="0">Any</option>
+<option value="1">0 - Bachelors</option>
+<option value="2">1</option>
+<option value="3">2</option>
+<option value="4">3</option>
+<option value="5">4</option>
+<option value="6">5</option>
+<option value="7">6 or more</option>
+</select>
+</div>
+<div class="mobile-hidden-filter half">
+<div>
+<label for="LocationsList">Locations</label><br/>
+<select id="SelectedLocations" multiple="multiple" name="SelectedLocations"><option value="2">Downtown</option>
+<option value="1">Old North</option>
+<option value="3">Near South</option>
+<option value="4">Near West</option>
+<option value="5">Whitehills</option>
+<option value="6">Masonville</option>
+<option value="7">North London</option>
+<option value="8">Kipps Lane</option>
+<option value="10">East London</option>
+<option value="12">Old South</option>
+<option value="11">S. E. London</option>
+<option value="14">West London</option>
+<option value="13">S. W. London</option>
+<option value="9">N. E. London</option>
+<option value="15">Outside London</option>
+<option value="16">On Campus</option>
+</select>
+</div>
+<div class="clearfix"> </div>
+</div>
+</div>
+</div>
+<div class="grd-2 mobile-hidden-filter">
+<div class="tenant_type">
+<label for="TenantTypeId">Tenant Type</label><br/>
+<select id="TenantTypeId" name="TenantTypeId"><option selected="selected" value="0">Any</option>
+<option value="1">Staff/Faculty</option>
+<option value="2">Graduate Student(s)</option>
+<option value="3">Student</option>
+<option value="4">International/Exchange Student</option>
+</select>
+</div>
+<div class="housing_input">
+<label for="HousingTypesList">Housing Types</label><br/>
+<select id="SelectedHousing" multiple="multiple" name="SelectedHousing"><option value="0">Bachelor Apt</option>
+<option value="1">Apartment</option>
+<option value="2">House</option>
+<option value="6">Apt to Share</option>
+<option value="7">House to Share</option>
+<option value="13">Rooms</option>
+<option value="11">Temporary</option>
+<option value="12">Sublets</option>
+</select>
+</div>
+<div class="clearfix"> </div>
+<div>
+<div class="distance_input">
+<label for="Distance">Distance from UWO</label><br/>
+<select id="Distance" name="Distance"><option selected="selected" value="0">All Distances</option>
+<option value="1">&lt; 2km from UWO</option>
+<option value="2">2km - 4.9km from UWO</option>
+<option value="3">5.0km - 9.9km from UWO</option>
+<option value="4">&gt; 10km from UWO</option>
+</select>
+</div>
+<div class="posted_input">
+<label for="Posted">Posted</label><br/>
+<select id="Posted" name="Posted"><option value="0">Anytime</option>
+<option value="1">Last 14 Days</option>
+</select>
+</div>
+</div>
+</div>
+</div>
+<div class="mobile-hidden-filter">
+<div class="clearfix"> </div>
+<div class="btn btn-s-less" id="s-amenities-btn">Amenities</div>
+<div id="s-amenities" style="display: none;">
+<div class="grd-4">
+<input data-val="true" data-val-required="The IsSelected field is required." id="AmenitiesCheckList_0__IsSelected" name="AmenitiesCheckList[0].IsSelected" type="checkbox" value="true"/>
+    Utilities Incl
+    <input data-val="true" data-val-required="The Id field is required." id="AmenitiesCheckList_0__Id" name="AmenitiesCheckList[0].Id" type="hidden" value="1"/>
+</div>
+<div class="grd-4">
+<input data-val="true" data-val-required="The IsSelected field is required." id="AmenitiesCheckList_1__IsSelected" name="AmenitiesCheckList[1].IsSelected" type="checkbox" value="true"/>
+    A/C
+    <input data-val="true" data-val-required="The Id field is required." id="AmenitiesCheckList_1__Id" name="AmenitiesCheckList[1].Id" type="hidden" value="2"/>
+</div>
+<div class="grd-4">
+<input data-val="true" data-val-required="The IsSelected field is required." id="AmenitiesCheckList_2__IsSelected" name="AmenitiesCheckList[2].IsSelected" type="checkbox" value="true"/>
+    Private Bathroom
+    <input data-val="true" data-val-required="The Id field is required." id="AmenitiesCheckList_2__Id" name="AmenitiesCheckList[2].Id" type="hidden" value="3"/>
+</div>
+<div class="grd-4">
+<input data-val="true" data-val-required="The IsSelected field is required." id="AmenitiesCheckList_3__IsSelected" name="AmenitiesCheckList[3].IsSelected" type="checkbox" value="true"/>
+    Furnished Bdrm(s)
+    <input data-val="true" data-val-required="The Id field is required." id="AmenitiesCheckList_3__Id" name="AmenitiesCheckList[3].Id" type="hidden" value="4"/>
+</div>
+<div class="grd-4">
+<input data-val="true" data-val-required="The IsSelected field is required." id="AmenitiesCheckList_4__IsSelected" name="AmenitiesCheckList[4].IsSelected" type="checkbox" value="true"/>
+    Furniture Incl
+    <input data-val="true" data-val-required="The Id field is required." id="AmenitiesCheckList_4__Id" name="AmenitiesCheckList[4].Id" type="hidden" value="5"/>
+</div>
+<div class="grd-4">
+<input data-val="true" data-val-required="The IsSelected field is required." id="AmenitiesCheckList_5__IsSelected" name="AmenitiesCheckList[5].IsSelected" type="checkbox" value="true"/>
+    Transit
+    <input data-val="true" data-val-required="The Id field is required." id="AmenitiesCheckList_5__Id" name="AmenitiesCheckList[5].Id" type="hidden" value="6"/>
+</div>
+<div class="grd-4">
+<input data-val="true" data-val-required="The IsSelected field is required." id="AmenitiesCheckList_6__IsSelected" name="AmenitiesCheckList[6].IsSelected" type="checkbox" value="true"/>
+    Laundry
+    <input data-val="true" data-val-required="The Id field is required." id="AmenitiesCheckList_6__Id" name="AmenitiesCheckList[6].Id" type="hidden" value="7"/>
+</div>
+<div class="grd-4">
+<input data-val="true" data-val-required="The IsSelected field is required." id="AmenitiesCheckList_7__IsSelected" name="AmenitiesCheckList[7].IsSelected" type="checkbox" value="true"/>
+    Dishwasher
+    <input data-val="true" data-val-required="The Id field is required." id="AmenitiesCheckList_7__Id" name="AmenitiesCheckList[7].Id" type="hidden" value="8"/>
+</div>
+<div class="grd-4">
+<input data-val="true" data-val-required="The IsSelected field is required." id="AmenitiesCheckList_8__IsSelected" name="AmenitiesCheckList[8].IsSelected" type="checkbox" value="true"/>
+    Parking
+    <input data-val="true" data-val-required="The Id field is required." id="AmenitiesCheckList_8__Id" name="AmenitiesCheckList[8].Id" type="hidden" value="9"/>
+</div>
+<div class="grd-4">
+<input data-val="true" data-val-required="The IsSelected field is required." id="AmenitiesCheckList_9__IsSelected" name="AmenitiesCheckList[9].IsSelected" type="checkbox" value="true"/>
+    Accessible
+    <input data-val="true" data-val-required="The Id field is required." id="AmenitiesCheckList_9__Id" name="AmenitiesCheckList[9].Id" type="hidden" value="10"/>
+</div>
+<div class="grd-4">
+<input data-val="true" data-val-required="The IsSelected field is required." id="AmenitiesCheckList_10__IsSelected" name="AmenitiesCheckList[10].IsSelected" type="checkbox" value="true"/>
+    Cable Incl
+    <input data-val="true" data-val-required="The Id field is required." id="AmenitiesCheckList_10__Id" name="AmenitiesCheckList[10].Id" type="hidden" value="11"/>
+</div>
+<div class="grd-4">
+<input data-val="true" data-val-required="The IsSelected field is required." id="AmenitiesCheckList_11__IsSelected" name="AmenitiesCheckList[11].IsSelected" type="checkbox" value="true"/>
+    Microwave
+    <input data-val="true" data-val-required="The Id field is required." id="AmenitiesCheckList_11__Id" name="AmenitiesCheckList[11].Id" type="hidden" value="12"/>
+</div>
+<div class="grd-4">
+<input data-val="true" data-val-required="The IsSelected field is required." id="AmenitiesCheckList_12__IsSelected" name="AmenitiesCheckList[12].IsSelected" type="checkbox" value="true"/>
+    Internet Incl
+    <input data-val="true" data-val-required="The Id field is required." id="AmenitiesCheckList_12__Id" name="AmenitiesCheckList[12].Id" type="hidden" value="17"/>
+</div>
+</div>
+</div>
+<div class="clearfix"> </div>
+<button class="btn btn-listing-a hide-roommate-btn" id="btn-roommate-search" onclick="setRoommateWanted()" type="button">Roommates Wanted</button>
+<div class="clearfix"> </div>
+<button class="btn btn-listing-c" id="btn-main-search-more">More Options</button>
+<button class="btn btn-listing-c" id="btn-main-search-less">Less Options</button>
+<div>
+<p>Please be advised that Western University does not endorse, approve, or confirm the accuracy of the content posted on this website.
+            <a data-popup-open="popup-2" href="#" style="text-decoration: underline">Read the full Prospective Tenants Notice.</a></p>
+</div>
+<button class="btn btn-listing-a" id="btn-main-search" type="submit">Search</button>
+<div class="clearfix"> </div>
+</div>
+<input name="Desc" type="hidden" value="false"/><input name="AmenitiesCheckList[0].IsSelected" type="hidden" value="false"/><input name="AmenitiesCheckList[1].IsSelected" type="hidden" value="false"/><input name="AmenitiesCheckList[2].IsSelected" type="hidden" value="false"/><input name="AmenitiesCheckList[3].IsSelected" type="hidden" value="false"/><input name="AmenitiesCheckList[4].IsSelected" type="hidden" value="false"/><input name="AmenitiesCheckList[5].IsSelected" type="hidden" value="false"/><input name="AmenitiesCheckList[6].IsSelected" type="hidden" value="false"/><input name="AmenitiesCheckList[7].IsSelected" type="hidden" value="false"/><input name="AmenitiesCheckList[8].IsSelected" type="hidden" value="false"/><input name="AmenitiesCheckList[9].IsSelected" type="hidden" value="false"/><input name="AmenitiesCheckList[10].IsSelected" type="hidden" value="false"/><input name="AmenitiesCheckList[11].IsSelected" type="hidden" value="false"/><input name="AmenitiesCheckList[12].IsSelected" type="hidden" value="false"/></form>

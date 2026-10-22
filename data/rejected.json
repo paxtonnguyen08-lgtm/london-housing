@@ -1,0 +1,40 @@
+{
+  "western_och": {
+    "63690": {
+      "reasons": [
+        "7.3 km away"
+      ],
+      "price": 875,
+      "available": "2027-05-01",
+      "marker": "875|2027-05-01",
+      "rejected_on": "2026-10-22"
+    },
+    "63687": {
+      "reasons": [
+        "7.4 km away"
+      ],
+      "price": 750,
+      "available": "2027-05-01",
+      "marker": "750|2027-05-01",
+      "rejected_on": "2026-10-22"
+    },
+    "63661": {
+      "reasons": [
+        "6.49 km away"
+      ],
+      "price": 795,
+      "available": "2027-05-01",
+      "marker": "795|2027-05-01",
+      "rejected_on": "2026-10-22"
+    },
+    "63489": {
+      "reasons": [
+        "7.2 km away"
+      ],
+      "price": 795,
+      "available": "2027-05-01",
+      "marker": "795|2027-05-01",
+      "rejected_on": "2026-10-22"
+    }
+  }
+}

@@ -1,0 +1,144 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>House Hunt</title>
+  <meta name="description" content="Our group's search for a student house near Western, May 2027.">
+  <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#0e0e0d" media="(prefers-color-scheme: dark)">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="House Hunt">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="icon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Serif&family=Inter:wght@400;500&display=swap">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.19.0/dist/tabler-icons.min.css">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div id="app">
+    <header class="topbar">
+      <h1 class="serif" id="page-title">Discover</h1>
+      <button class="me-chip" id="me-chip" type="button" aria-label="Switch person">
+        <span class="avatar" id="me-avatar">?</span><span id="me-name">Who are you?</span>
+      </button>
+    </header>
+
+    <div class="banner" id="group-banner" role="status" hidden></div>
+    <div class="banner" id="data-banner" hidden></div>
+
+    <!-- Discover: the swipe deck -->
+    <section id="tab-discover" data-title="Discover">
+      <div class="pills" id="discover-pills"></div>
+      <div class="deck" id="deck" aria-live="polite"></div>
+      <div class="deck-actions" id="deck-actions">
+        <button class="round small" id="btn-undo" type="button" aria-label="Undo last swipe"><i class="ti ti-arrow-back-up"></i></button>
+        <button class="round pass" id="btn-pass" type="button" aria-label="Pass"><i class="ti ti-x"></i></button>
+        <button class="round small" id="btn-info" type="button" aria-label="Show the rundown"><i class="ti ti-info-circle"></i></button>
+        <button class="round ink" id="btn-like" type="button" aria-label="Like"><i class="ti ti-heart"></i></button>
+      </div>
+      <p class="deck-hint" id="deck-hint">Swipe right to like, left to pass. Tap the card for the rundown.</p>
+    </section>
+
+    <!-- Shortlist -->
+    <section id="tab-shortlist" data-title="Shortlist" hidden>
+      <p class="muted small" style="margin-top:0">Houses at least one of you liked. Matches (everyone liked it) are on top.</p>
+      <div class="list" id="shortlist"></div>
+    </section>
+
+    <!-- Home: summary + website-style listings -->
+    <section id="tab-home" data-title="Home" hidden>
+      <div id="summary"></div>
+      <div class="pills" id="home-pills"></div>
+      <div class="section-head">
+        <h2 id="list-count">All listings</h2>
+        <select class="plain" id="sort" aria-label="Sort listings">
+          <option value="cost">Cost per person</option>
+          <option value="walk">Walk time</option>
+          <option value="newest">Newest</option>
+          <option value="votes">Group votes</option>
+        </select>
+      </div>
+      <div class="list" id="listings"></div>
+    </section>
+
+    <!-- Group -->
+    <section id="tab-group" data-title="Group" hidden>
+      <div id="group"></div>
+    </section>
+  </div>
+
+  <nav class="tabbar" aria-label="Main">
+    <div class="tabbar-inner">
+      <button type="button" data-tab="discover" class="on"><i class="ti ti-cards"></i>Discover<span class="badge" id="deck-badge" hidden></span></button>
+      <button type="button" data-tab="shortlist"><i class="ti ti-heart"></i>Shortlist</button>
+      <button type="button" data-tab="home"><i class="ti ti-home"></i>Home</button>
+      <button type="button" data-tab="group"><i class="ti ti-users"></i>Group</button>
+    </div>
+  </nav>
+
+  <dialog class="sheet" id="detail-sheet" aria-label="House details">
+    <button class="sheet-close" type="button" data-close aria-label="Close"><i class="ti ti-x"></i></button>
+    <div class="sheet-inner" id="detail"></div>
+  </dialog>
+
+  <dialog class="sheet" id="filter-sheet" aria-label="Filters">
+    <button class="sheet-close" type="button" data-close aria-label="Close"><i class="ti ti-x"></i></button>
+    <div class="sheet-inner">
+      <div class="sheet-grab"></div>
+      <h2 class="serif" style="font-size:30px;margin:0 0 8px">Filters</h2>
+      <div class="filter-group">
+        <div class="filter-label"><span>Group size (bedrooms)</span></div>
+        <div class="seg" id="f-size"></div>
+      </div>
+      <div class="filter-group">
+        <div class="filter-label"><span>Cost per person, with utilities</span><span id="f-budget-out"></span></div>
+        <div class="dual">
+          <div class="dual-track"></div><div class="dual-fill" id="f-fill"></div>
+          <input type="range" id="f-min" min="700" max="1400" step="25" aria-label="Minimum cost per person">
+          <input type="range" id="f-max" min="700" max="1400" step="25" aria-label="Maximum cost per person">
+        </div>
+      </div>
+      <div class="filter-group">
+        <div class="filter-label"><span>Max walk to Huron</span></div>
+        <div class="seg" id="f-walk"></div>
+      </div>
+      <div class="filter-group">
+        <label class="switch"><span>Utilities included only</span><input type="checkbox" id="f-util"></label>
+      </div>
+      <div class="row-btns" style="margin-top:12px">
+        <button class="btn" type="button" id="f-reset">Reset</button>
+        <button class="btn btn-ink" type="button" data-close id="f-done">Show houses</button>
+      </div>
+    </div>
+  </dialog>
+
+  <div class="overlay" id="onboard" hidden>
+    <div class="overlay-inner">
+      <h2>Who are you?</h2>
+      <p class="muted">Pick your name so the group knows whose vote is whose. No account needed.</p>
+      <div class="name-grid" id="name-grid"></div>
+      <p class="faint tiny" id="onboard-note"></p>
+    </div>
+  </div>
+
+  <div class="overlay" id="match" hidden>
+    <div class="overlay-inner">
+      <div class="match-photo" id="match-photo"></div>
+      <h2>It's a match</h2>
+      <p class="muted" id="match-text"></p>
+      <div class="row-btns" style="margin-top:20px">
+        <button class="btn" type="button" id="match-keep">Keep swiping</button>
+        <button class="btn btn-ink" type="button" id="match-open">See the house</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast" role="status" hidden></div>
+
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>

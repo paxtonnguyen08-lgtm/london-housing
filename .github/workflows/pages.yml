@@ -1,0 +1,55 @@
+# Publish website: puts site/ (plus the latest listings) on GitHub Pages.
+name: Publish website
+
+on:
+  # You changed the website or the data by hand
+  push:
+    branches: [main]
+    paths:
+      - "site/**"
+      - "data/listings.json"
+      - ".github/workflows/pages.yml"
+      - ".github/scripts/build_site.sh"
+  # The daily scrape finished. (Its data commit can't trigger "push" above: GitHub doesn't
+  # let the bot's own commits start other workflows, so we listen for the run finishing.)
+  workflow_run:
+    workflows: ["Daily scrape"]
+    types: [completed]
+  workflow_dispatch: # a "Run workflow" button on the Actions tab
+
+permissions:
+  contents: read
+  pages: write # publish to GitHub Pages
+  id-token: write # prove to Pages that this workflow is allowed to publish
+
+concurrency:
+  group: pages
+  cancel-in-progress: true # only the newest version of the site matters
+
+jobs:
+  publish:
+    # After a scrape, only publish if the scrape worked
+    if: github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    steps:
+      - name: Get the code (including the scrape's latest data)
+        uses: actions/checkout@v4
+
+      - name: Assemble the site
+        run: bash .github/scripts/build_site.sh _site
+
+      - name: Set up Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload the site
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+
+      - name: Publish
+        id: deploy
+        uses: actions/deploy-pages@v4

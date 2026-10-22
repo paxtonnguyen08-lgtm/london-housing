@@ -1,0 +1,13 @@
+{
+  "name": "House Hunt",
+  "short_name": "House Hunt",
+  "description": "Our group's search for a student house near Western, May 2027.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#ffffff",
+  "icons": [
+    { "src": "icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }
+  ]
+}

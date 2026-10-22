@@ -1,0 +1,80 @@
+# Daily scrape: GitHub runs the scraper on its own computers every morning and saves
+# the updated data/ folder back into the repo, so the website always has fresh listings.
+name: Daily scrape
+
+on:
+  schedule:
+    # GitHub's clock is UTC: 11:00 UTC = 7 am Toronto in summer, 6 am in winter.
+    # Scheduled runs can start a few minutes late when GitHub is busy.
+    - cron: "0 11 * * *"
+  workflow_dispatch: # adds a "Run workflow" button on the Actions tab
+
+permissions:
+  contents: write # needed to commit the updated data/ files
+
+concurrency:
+  group: scrape # never run two scrapes at once
+  cancel-in-progress: false
+
+jobs:
+  scrape:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90 # the very first run opens every listing once (10 s apart)
+    steps:
+      - name: Get the code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install packages
+        run: pip install -r requirements.txt
+
+      - name: Run the tests first (stop if anything is broken)
+        run: pytest -q
+
+      - name: Run the scraper
+        env:
+          PYTHONWARNINGS: ignore
+        run: python -m scraper.run
+
+      - name: Write a summary of new listings
+        run: python .github/scripts/summarize.py data/listings.json --markdown >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Save the new data to the repo
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/
+          if git diff --cached --quiet; then
+            echo "No changes to save."
+            exit 0
+          fi
+          NEW=$(python .github/scripts/summarize.py data/listings.json --count)
+          git commit -m "Update listings: $NEW new ($(date -u +%Y-%m-%d))"
+          git pull --rebase
+          git push
+
+      # Emails the group about houses first seen in this run. Until the Gmail secrets are
+      # added it just prints what it would have sent. Re-running the same day sends nothing,
+      # because those houses are no longer new.
+      - name: Email the group about new houses
+        continue-on-error: true # a mail problem must never stop the website from updating
+        env:
+          SMTP_USER: ${{ secrets.SMTP_USER }}
+          SMTP_PASSWORD: ${{ secrets.SMTP_PASSWORD }}
+          ALERT_TO: ${{ secrets.ALERT_TO }}
+          SITE_URL: ${{ vars.SITE_URL || format('https://{0}.github.io/{1}/', github.repository_owner, github.event.repository.name) }}
+        run: python -m alerts.email_digest
+
+      # Free Supabase projects pause after about a week without activity. One tiny read a day
+      # keeps the group's votes online. Skipped until the two secrets are added (supabase/SETUP.md).
+      - name: Keep Supabase awake
+        if: always()
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+        run: bash .github/scripts/supabase_ping.sh

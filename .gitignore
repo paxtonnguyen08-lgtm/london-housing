@@ -1,0 +1,11 @@
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+.DS_Store
+node_modules/
+.env
+.env.*
+
+# Local email previews (python -m alerts.email_digest --preview ...)
+email-preview.html
