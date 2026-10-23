@@ -7,6 +7,8 @@ import {
   money, parseInviteInput, parseJoinHash, shareText, shortlist, sortListings, statusOf, votesFor, walkLabel, formatDate, costOf,
 } from "./logic.js";
 import { MIN_VOTES, budgetCheck, groupProfile, readiness, suggest } from "./recommend.js";
+import { mapPoints } from "./mapdata.js";
+import { legendHtml, renderMap } from "./map.js";
 import { Deck } from "./swipe.js";
 import {
   alsoListed, bulletList, dots, esc, num, safeUrl, factsGrid, fitLine, isNewFor, listRow, photoClass, photoInner, photoStyle, priceNote,
@@ -26,6 +28,7 @@ const app = {
   me: prefs.get("me"),
   filters: { ...DEFAULT_FILTERS, ...prefs.get("filters", {}) },
   sort: prefs.get("sort", "cost"),
+  homeView: prefs.get("homeView", "list"), // Home shows the listings as a "list" or a "map"
   tab: prefs.get("tab", "discover"),
   order: prefs.get("order", "suggested"), // the deck's order: "suggested" (once unlocked) or "newest"
   why: {}, // "why suggested" reasons for each card in the deck, by house key
@@ -327,9 +330,36 @@ function renderHome() {
   const items = sortListings(filterListings(app.listings, app.filters), app.sort, store.state)
     .filter((l) => statusOf(store.state, l.key) !== "rejected");
   $("list-count").textContent = `${items.length} listing${items.length === 1 ? "" : "s"}`;
+
+  const onMap = app.homeView === "map";
+  for (const b of document.querySelectorAll("[data-view]")) b.classList.toggle("on", b.dataset.view === app.homeView);
+  $("sort").hidden = onMap;
+  $("listings").hidden = onMap;
+  $("map-wrap").hidden = !onMap;
+  if (onMap) {
+    renderHomeMap();
+    return;
+  }
   $("listings").innerHTML = items.length
     ? items.map((l) => listRow(l, store.state, { members, isNew: isNewFor(l, app.seen) })).join("")
     : '<div class="empty"><span class="serif">No matches</span>Loosen the filters to see more.</div>';
+}
+
+function renderHomeMap() {
+  const { points, missing } = mapPoints(app.listings, app.filters, store.state, { budget: myBudget(), members });
+  $("map-legend").innerHTML = legendHtml();
+  $("map-note").textContent = missing.length
+    ? `${points.length} on the map. ${missing.length} more ${missing.length === 1 ? "has" : "have"} no exact address (for example an intersection), so ${missing.length === 1 ? "it's" : "they're"} only in the List.`
+    : `${points.length} on the map. Colours compare each place with your budget (${money(myBudget())}).`;
+  renderMap($("map"), points, app.byKey).catch((err) => {
+    $("map-note").textContent = err.message;
+  });
+}
+
+function setHomeView(view) {
+  app.homeView = view;
+  prefs.set("homeView", view);
+  renderHome();
 }
 
 // ---------- Group ----------
@@ -591,9 +621,10 @@ function bindEvents() {
   });
 
   document.addEventListener("click", (e) => {
-    const t = e.target.closest("[data-open],[data-share],[data-filters],[data-order],[data-tab-go],[data-scroll],[data-close],[data-me]");
+    const t = e.target.closest("[data-open],[data-share],[data-filters],[data-order],[data-tab-go],[data-scroll],[data-close],[data-me],[data-view]");
     if (!t) return;
     if (t.dataset.open !== undefined) openDetail(t.dataset.open);
+    else if (t.dataset.view) setHomeView(t.dataset.view);
     else if (t.dataset.share !== undefined) share(t.dataset.share);
     else if (t.dataset.filters !== undefined) openFilters();
     else if (t.dataset.order !== undefined) toggleOrder();

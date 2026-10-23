@@ -57,14 +57,25 @@
       <div class="pills" id="home-pills"></div>
       <div class="section-head">
         <h2 id="list-count">All listings</h2>
-        <select class="plain" id="sort" aria-label="Sort listings">
-          <option value="cost">Cost per person</option>
-          <option value="walk">Walk time</option>
-          <option value="newest">Newest</option>
-          <option value="votes">Group votes</option>
-        </select>
+        <div class="head-tools">
+          <div class="view-toggle" role="group" aria-label="Show as">
+            <button class="pill" type="button" data-view="list">List</button>
+            <button class="pill" type="button" data-view="map">Map</button>
+          </div>
+          <select class="plain" id="sort" aria-label="Sort listings">
+            <option value="cost">Cost per person</option>
+            <option value="walk">Walk time</option>
+            <option value="newest">Newest</option>
+            <option value="votes">Group votes</option>
+          </select>
+        </div>
       </div>
       <div class="list" id="listings"></div>
+      <div id="map-wrap" hidden>
+        <div class="map" id="map" aria-label="Map of listings"></div>
+        <div class="map-legend" id="map-legend"></div>
+        <p class="muted small" id="map-note"></p>
+      </div>
     </section>
 
     <!-- Group -->

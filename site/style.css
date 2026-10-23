@@ -392,3 +392,37 @@ dialog.sheet::backdrop { background: rgba(0, 0, 0, 0.45); }
 @media (prefers-reduced-motion: reduce) {
   .card.flying, .card.settle { transition: none; }
 }
+
+/* Home: List / Map switch and the map */
+.head-tools { display: flex; gap: 8px; align-items: center; }
+.view-toggle { display: flex; gap: 4px; }
+.view-toggle .pill { padding: 5px 12px; font-size: 13px; }
+.map { height: min(62vh, 520px); border-radius: var(--radius); overflow: hidden; margin-top: 8px; background: var(--bg-2); }
+.map-legend { display: flex; flex-wrap: wrap; gap: 6px 14px; margin: 10px 0 2px; font-size: 12px; color: var(--text-2); }
+.map-key { display: inline-flex; align-items: center; gap: 6px; }
+.map-key .dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
+.dot.fits { background: var(--good); }
+.dot.stretch { background: var(--warn); }
+.dot.over { background: var(--bad); }
+.dot.match { background: transparent; border: 2.5px solid var(--ink); width: 12px; height: 12px; }
+.map .leaflet-tile-pane { filter: grayscale(1) contrast(0.9) brightness(1.04); }
+@media (prefers-color-scheme: dark) {
+  .map .leaflet-tile-pane { filter: grayscale(1) invert(1) contrast(0.85) brightness(0.9); }
+}
+.map-place { position: relative; }
+.map-place i {
+  position: absolute; width: 10px; height: 10px; left: -5px; top: -5px; border-radius: 50%;
+  background: var(--ink); border: 2px solid var(--bg);
+}
+.map-place span {
+  position: absolute; top: 0; white-space: nowrap;
+  background: var(--ink); color: var(--on-ink); font: 500 11px var(--sans);
+  padding: 3px 8px; border-radius: 999px; transform: translateY(-50%);
+}
+.map-place span.right { left: 9px; }
+.map-place span.left { right: 9px; }
+.map-pop { font: 13px var(--sans); display: flex; flex-direction: column; gap: 3px; }
+.map-pop strong { font-weight: 500; font-size: 14px; }
+.map-pop .pill { margin-top: 6px; align-self: flex-start; }
+.leaflet-popup-content-wrapper, .leaflet-popup-tip { background: var(--bg); color: var(--text); }
+.leaflet-container { font-family: var(--sans); }
