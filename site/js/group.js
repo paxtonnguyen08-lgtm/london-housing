@@ -1,11 +1,12 @@
-// Group state: votes, notes, status per house, and everyone's budgets.
+// Group state: votes, notes, status per house, viewing scorecards, and everyone's budgets.
 //
 // LocalGroupStore keeps it on this device (localStorage). A Supabase store with the same
 // methods replaces it once the database is set up, so the screens don't change.
 import { STATUSES } from "./logic.js";
+import { cleanScorecard, isEmptyScorecard, putScorecard } from "./scorecard.js";
 
 export function emptyState() {
-  return { votes: {}, notes: {}, status: {}, budgets: {} };
+  return { votes: {}, notes: {}, status: {}, budgets: {}, scorecards: {} };
 }
 
 const MAX_NOTE = 500;
@@ -94,6 +95,14 @@ export class LocalGroupStore {
       s.budgets[member] = n;
     });
     return true;
+  }
+
+  // My viewing scorecard for a house (see scorecard.js). Saving again replaces it; saving an
+  // empty one removes it. Returns true if saved, false if it was empty.
+  async saveScorecard(key, member, card) {
+    const clean = cleanScorecard(card); // throws on a rating that isn't 1–5
+    this._update((s) => putScorecard(s, key, member, clean));
+    return !isEmptyScorecard(clean);
   }
 }
 

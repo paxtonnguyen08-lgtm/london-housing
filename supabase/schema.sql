@@ -1,5 +1,5 @@
--- Shared group state for the house finder: votes, notes, status per house, budgets,
--- and phone push subscriptions.
+-- Shared group state for the house finder: votes, notes, status per house, viewing scorecards,
+-- budgets, and phone push subscriptions.
 --
 -- How to use: paste this whole file into Supabase's SQL editor and press Run.
 -- It's safe to run again later (it only creates what's missing and replaces functions).
@@ -50,6 +50,27 @@ create table if not exists listing_status (
   updated_at timestamptz not null default now()
 );
 
+-- One viewing scorecard per person per house. Ratings are 1 (bad) to 5 (great) for every item,
+-- so for damp and noise 5 means none. Empty ratings are null.
+create table if not exists scorecards (
+  listing_key text not null check (length(listing_key) between 1 and 200),
+  member text not null references members(name) on delete cascade,
+  bedrooms smallint check (bedrooms between 1 and 5),  -- are the bedrooms roughly equal?
+  bathrooms smallint check (bathrooms between 1 and 5),
+  kitchen smallint check (kitchen between 1 and 5),
+  heating smallint check (heating between 1 and 5),
+  laundry smallint check (laundry between 1 and 5),
+  damp smallint check (damp between 1 and 5),
+  noise smallint check (noise between 1 and 5),
+  internet smallint check (internet between 1 and 5),
+  landlord smallint check (landlord between 1 and 5),
+  lease_ok boolean,
+  deposit_asked boolean,  -- a damage deposit: not allowed in Ontario
+  note text not null default '' check (length(note) <= 500),
+  updated_at timestamptz not null default now(),
+  primary key (listing_key, member)
+);
+
 create table if not exists push_subs (
   endpoint text primary key,  -- the browser's push address; unique per phone
   member text not null references members(name) on delete cascade,
@@ -64,7 +85,8 @@ alter table votes enable row level security;
 alter table notes enable row level security;
 alter table listing_status enable row level security;
 alter table push_subs enable row level security;
-revoke all on settings, members, votes, notes, listing_status, push_subs from public, anon, authenticated;
+alter table scorecards enable row level security;
+revoke all on settings, members, votes, notes, listing_status, push_subs, scorecards from public, anon, authenticated;
 -- The daily GitHub job (secret key = service_role) reads push_subs: to keep the free project
 -- awake, and later to send phone alerts. Needed when "Automatically expose new tables" is off.
 grant select on push_subs to service_role;
@@ -85,6 +107,21 @@ begin
   if p_member is not null and not exists (select 1 from members where name = p_member) then
     raise exception 'unknown member %', p_member using errcode = '22023';
   end if;
+end $$;
+
+-- One rating from a scorecard sent by the page: null if it's missing, else a whole number 1–5.
+create or replace function _rating(p_card jsonb, p_item text) returns smallint
+language plpgsql immutable set search_path = pg_catalog, pg_temp
+as $$
+declare v jsonb := p_card->'ratings'->p_item;
+begin
+  if v is null or jsonb_typeof(v) = 'null' then
+    return null;
+  end if;
+  if jsonb_typeof(v) <> 'number' or v::text !~ '^[1-5]$' then
+    raise exception 'bad rating for %', p_item using errcode = '22023';
+  end if;
+  return v::text::smallint;
 end $$;
 
 -- Run once from the SQL editor (see SETUP.md). Running it again changes the code and
@@ -130,7 +167,16 @@ begin
                jsonb_build_object('status', status, 'by', updated_by, 'at', updated_at))
       from listing_status), '{}'::jsonb),
     'budgets', coalesce((
-      select jsonb_object_agg(name, budget_max) from members where budget_max is not null), '{}'::jsonb)
+      select jsonb_object_agg(name, budget_max) from members where budget_max is not null), '{}'::jsonb),
+    'scorecards', coalesce((
+      select jsonb_object_agg(listing_key, by_member) from (
+        select listing_key, jsonb_object_agg(member, jsonb_build_object(
+                 'ratings', jsonb_strip_nulls(jsonb_build_object(
+                   'bedrooms', bedrooms, 'bathrooms', bathrooms, 'kitchen', kitchen, 'heating', heating,
+                   'laundry', laundry, 'damp', damp, 'noise', noise, 'internet', internet, 'landlord', landlord)),
+                 'lease_ok', lease_ok, 'deposit_asked', deposit_asked, 'note', note, 'at', updated_at)) as by_member
+        from scorecards group by listing_key
+      ) c), '{}'::jsonb)
   );
 end $$;
 
@@ -192,6 +238,47 @@ begin
   return true;
 end $$;
 
+-- My viewing scorecard for a house. p_card looks like the page's:
+--   {"ratings": {"kitchen": 4, ...}, "lease_ok": true, "deposit_asked": false, "note": "..."}
+-- Saving again replaces it. An empty card removes mine and returns false; otherwise returns true.
+-- Unknown items are ignored; a rating that isn't a whole number 1–5 is refused.
+create or replace function group_save_scorecard(p_code text, p_key text, p_member text, p_card jsonb) returns boolean
+language plpgsql security definer set search_path = public, pg_temp
+as $$
+declare
+  c jsonb := coalesce(p_card, '{}'::jsonb);
+  r scorecards%rowtype;
+begin
+  perform _check(p_code, p_member);
+  r.bedrooms := _rating(c, 'bedrooms');
+  r.bathrooms := _rating(c, 'bathrooms');
+  r.kitchen := _rating(c, 'kitchen');
+  r.heating := _rating(c, 'heating');
+  r.laundry := _rating(c, 'laundry');
+  r.damp := _rating(c, 'damp');
+  r.noise := _rating(c, 'noise');
+  r.internet := _rating(c, 'internet');
+  r.landlord := _rating(c, 'landlord');
+  r.lease_ok := case when jsonb_typeof(c->'lease_ok') = 'boolean' then (c->>'lease_ok')::boolean end;
+  r.deposit_asked := case when jsonb_typeof(c->'deposit_asked') = 'boolean' then (c->>'deposit_asked')::boolean end;
+  r.note := left(trim(coalesce(c->>'note', '')), 500);
+  if num_nonnulls(r.bedrooms, r.bathrooms, r.kitchen, r.heating, r.laundry, r.damp, r.noise, r.internet,
+                  r.landlord, r.lease_ok, r.deposit_asked) = 0 and r.note = '' then
+    delete from scorecards where listing_key = p_key and member = p_member;
+    return false;
+  end if;
+  insert into scorecards (listing_key, member, bedrooms, bathrooms, kitchen, heating, laundry, damp, noise,
+                          internet, landlord, lease_ok, deposit_asked, note)
+    values (p_key, p_member, r.bedrooms, r.bathrooms, r.kitchen, r.heating, r.laundry, r.damp, r.noise,
+            r.internet, r.landlord, r.lease_ok, r.deposit_asked, r.note)
+    on conflict (listing_key, member) do update set
+      bedrooms = excluded.bedrooms, bathrooms = excluded.bathrooms, kitchen = excluded.kitchen,
+      heating = excluded.heating, laundry = excluded.laundry, damp = excluded.damp, noise = excluded.noise,
+      internet = excluded.internet, landlord = excluded.landlord, lease_ok = excluded.lease_ok,
+      deposit_asked = excluded.deposit_asked, note = excluded.note, updated_at = now();
+  return true;
+end $$;
+
 -- Phase 3: a phone that turned on alerts. Same phone again just updates its entry.
 create or replace function save_push_sub(p_code text, p_member text, p_sub jsonb) returns void
 language plpgsql security definer set search_path = public, pg_temp
@@ -207,12 +294,13 @@ end $$;
 
 -- ---------- who may call what ----------
 -- Postgres lets everyone run new functions by default; take that away, then allow only the page's ones.
-revoke execute on function _code_hash(text), _check(text, text), setup_group(text, text[]),
+revoke execute on function _code_hash(text), _check(text, text), _rating(jsonb, text), setup_group(text, text[]),
   get_group_state(text), group_vote(text, text, text, text), group_add_note(text, text, text, text),
   group_set_status(text, text, text, text), group_set_budget(text, text, numeric),
-  save_push_sub(text, text, jsonb)
+  group_save_scorecard(text, text, text, jsonb), save_push_sub(text, text, jsonb)
   from public, anon, authenticated;
 grant execute on function get_group_state(text), group_vote(text, text, text, text),
   group_add_note(text, text, text, text), group_set_status(text, text, text, text),
-  group_set_budget(text, text, numeric), save_push_sub(text, text, jsonb)
+  group_set_budget(text, text, numeric), group_save_scorecard(text, text, text, jsonb),
+  save_push_sub(text, text, jsonb)
   to anon, authenticated;

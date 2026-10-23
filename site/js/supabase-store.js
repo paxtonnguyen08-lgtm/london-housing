@@ -1,12 +1,15 @@
-// Group state shared through Supabase, so everyone sees each other's votes, notes and budgets.
+// Group state shared through Supabase, so everyone sees each other's votes, notes, scorecards and budgets.
 // Same methods as LocalGroupStore. Every call goes through a database function that checks the
 // group code from the invite link (see supabase/schema.sql); nobody can read the tables directly.
 import { emptyState } from "./group.js";
 import { STATUSES } from "./logic.js";
+import { cleanScorecard, isEmptyScorecard, putScorecard } from "./scorecard.js";
 
 const FRIENDLY = [
   [/bad group code/i, "This invite link isn't valid. Ask your group for a new one."],
   [/unknown member/i, "Your name isn't in this group. Pick your name again."],
+  // The page is newer than the database: someone needs to run the latest supabase/schema.sql
+  [/could not find the function/i, "The group database needs an update before this works. Run the latest schema.sql in Supabase."],
 ];
 
 export class GroupError extends Error {
@@ -75,6 +78,7 @@ export class SupabaseGroupStore {
       notes: s?.notes || {},
       status: s?.status || {},
       budgets: s?.budgets || {},
+      scorecards: s?.scorecards || {},
     };
   }
 
@@ -167,5 +171,15 @@ export class SupabaseGroupStore {
       this._notify({ remote: false });
     }
     return Boolean(ok);
+  }
+
+  // Shows on screen instantly; put back if saving fails. Returns true if saved, false if it was empty.
+  async saveScorecard(key, member, card) {
+    const clean = cleanScorecard(card); // throws on a rating that isn't 1–5
+    await this._optimistic(
+      (s) => putScorecard(s, key, member, clean),
+      () => this.rpc("group_save_scorecard", { p_key: key, p_member: member, p_card: clean }),
+    );
+    return !isEmptyScorecard(clean);
   }
 }
