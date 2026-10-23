@@ -1,0 +1,42 @@
+# Test phone alert: sends "Test alert" to one person's phones (or everyone's), so you can check
+# alerts work without waiting for a new house. Actions tab → Test phone alert → Run workflow.
+name: Test phone alert
+
+on:
+  workflow_dispatch:
+    inputs:
+      who:
+        description: "Whose phones? A name from the group, or everyone"
+        required: true
+        default: everyone
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Get the code
+        uses: actions/checkout@v7
+
+      - name: Set up Python
+        uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install packages
+        run: pip install -r requirements.txt
+
+      - name: Send the test alert
+        env:
+          PYTHONWARNINGS: ignore
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+          VAPID_PRIVATE_KEY: ${{ secrets.VAPID_PRIVATE_KEY }}
+          VAPID_SUBJECT: ${{ vars.VAPID_SUBJECT }}
+          SITE_URL: ${{ vars.SITE_URL || format('https://{0}.github.io/{1}/', github.repository_owner, github.event.repository.name) }}
+          WHO: ${{ inputs.who }} # passed as a variable, so a name can't be run as a command
+        run: python -m scraper.notify --test "$WHO"

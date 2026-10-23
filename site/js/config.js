@@ -12,4 +12,7 @@ export const CONFIG = {
     url: "https://blfcbaqvwceziilsubox.supabase.co",
     anonKey: "sb_publishable_5hkbWbg560Ac1beZzZYLYQ_3OaSi9NF",
   },
+  // Phone alerts: the public half of the key pair, safe to be public. The private half is the
+  // VAPID_PRIVATE_KEY GitHub secret; replacing one means replacing both (scraper/notify.py --new-keys).
+  vapidPublicKey: "BLw_glGu4pYt4FsmoDBbaDiP5tsP9wdApO1FSfTsR96pnadFHlNplW-aXhFzmRO4b_qkpyMZGQo1kJYj-yJVcaM",
 };

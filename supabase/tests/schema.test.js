@@ -55,6 +55,7 @@ test("the page can't read or write tables directly", async () => {
     "select * from push_subs",
     "select * from scorecards",
     "insert into scorecards (listing_key, member, kitchen) values ('k', 'Maya', 5)",
+    "select * from push_sent",
     "insert into votes (listing_key, member, vote) values ('k', 'Maya', 'like')",
     "delete from notes",
   ]) {
@@ -175,13 +176,27 @@ test("setup_group: short codes refused; re-running changes the code but keeps vo
   assert.deepEqual(s.members, [...MEMBERS, "Alex"]);
 });
 
-test("the daily job's secret key can read push_subs (keep-alive), but no other table", async () => {
+test("the daily job's secret key can do what alerts need, but can't read the code hash or notes", async () => {
   const db = await fresh();
+  await page(db, "select group_vote($1, $2, $3, $4)", [CODE, KEY, "Maya", "like"]);
+  await page(db, "select save_push_sub($1, $2, $3)", [CODE, "Maya", { endpoint: "https://push.example/abc" }]);
   await db.exec("set role service_role");
   try {
-    const r = await db.query("select endpoint from push_subs limit 1");
-    assert.equal(r.rows.length, 0);
-    await assert.rejects(db.query("select * from votes"), /permission denied/);
+    assert.equal((await db.query("select endpoint from push_subs")).rows.length, 1);
+    assert.equal((await db.query("select name, budget_max from members")).rows.length, MEMBERS.length);
+    assert.deepEqual((await db.query("select listing_key, member from votes where vote = 'like'")).rows,
+      [{ listing_key: KEY, member: "Maya" }]);
+    // a match announced twice is ignored (what the job's "ignore duplicates" insert does)
+    const remember = "insert into push_sent (kind, listing_key) values ('match', $1) on conflict do nothing";
+    await db.query(remember, [KEY]);
+    await db.query(remember, [KEY]);
+    assert.equal((await db.query("select * from push_sent")).rows.length, 1);
+    // a phone that turned alerts off gets removed
+    await db.query("delete from push_subs where endpoint = 'https://push.example/abc'");
+    assert.equal((await db.query("select * from push_subs")).rows.length, 0);
+    for (const sql of ["select * from settings", "select * from notes", "insert into votes (listing_key, member, vote) values ('k', 'Maya', 'like')"]) {
+      await assert.rejects(db.query(sql), /permission denied/, sql);
+    }
   } finally {
     await db.exec("reset role");
   }
