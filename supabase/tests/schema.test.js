@@ -5,6 +5,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { PGlite } from "@electric-sql/pglite";
+import { emptyState } from "../../site/js/group.js";
 
 const SCHEMA = readFileSync(new URL("../schema.sql", import.meta.url), "utf8");
 const CODE = "maple-otter-42-lantern";
@@ -43,7 +44,7 @@ test("schema can be run twice without errors", async () => {
 
 test("empty group state has the same shape as the page's emptyState()", async () => {
   const db = await fresh();
-  assert.deepEqual(await state(db), { members: MEMBERS, votes: {}, notes: {}, status: {}, budgets: {} });
+  assert.deepEqual(await state(db), { members: MEMBERS, ...emptyState() });
 });
 
 test("the page can't read or write tables directly", async () => {
@@ -52,6 +53,8 @@ test("the page can't read or write tables directly", async () => {
     "select * from settings",
     "select * from votes",
     "select * from push_subs",
+    "select * from scorecards",
+    "insert into scorecards (listing_key, member, kitchen) values ('k', 'Maya', 5)",
     "insert into votes (listing_key, member, vote) values ('k', 'Maya', 'like')",
     "delete from notes",
   ]) {
@@ -64,6 +67,7 @@ test("the page can't call setup or helper functions", async () => {
   await assert.rejects(page(db, "select setup_group('another-long-code', array['Eve'])"), /permission denied/);
   await assert.rejects(page(db, "select _check($1)", [CODE]), /permission denied/);
   await assert.rejects(page(db, "select _code_hash('x')"), /permission denied/);
+  await assert.rejects(page(db, "select _rating('{}'::jsonb, 'kitchen')"), /permission denied/);
 });
 
 test("every page function rejects a wrong group code", async () => {
@@ -76,6 +80,9 @@ test("every page function rejects a wrong group code", async () => {
     ["select group_set_status($1, $2, $3, $4)", [bad, KEY, "interested", "Maya"]],
     ["select group_set_budget($1, $2, $3)", [bad, "Maya", 1000]],
     ["select save_push_sub($1, $2, $3)", [bad, "Maya", { endpoint: "https://push.example/1" }]],
+    ["select group_save_scorecard($1, $2, $3, $4)", [bad, KEY, "Maya", { ratings: { kitchen: 4 } }]],
+    // a bad rating still gets "bad group code" first: nothing about the card is checked for strangers
+    ["select group_save_scorecard($1, $2, $3, $4)", [bad, KEY, "Maya", { ratings: { kitchen: 9 } }]],
     ["select get_group_state($1)", [null]],
   ]) {
     await assert.rejects(page(db, sql, params), /bad group code/, sql);
@@ -178,4 +185,58 @@ test("the daily job's secret key can read push_subs (keep-alive), but no other t
   } finally {
     await db.exec("reset role");
   }
+});
+
+test("scorecards: saved per person, replaced on save, and shaped like the page's", async () => {
+  const db = await fresh();
+  const save = (m, card) =>
+    page(db, "select group_save_scorecard($1, $2, $3, $4) as ok", [CODE, KEY, m, card]).then((r) => r.rows[0].ok);
+  assert.equal(await save("Maya", {
+    ratings: { kitchen: 4, damp: 2, noise: null, sauna: 5 }, // unknown items are ignored
+    lease_ok: true, deposit_asked: false, note: "  basement bedroom is tiny  ",
+  }), true);
+  assert.equal(await save("Sam", { ratings: { kitchen: 2 }, deposit_asked: true }), true);
+  const cards = (await state(db)).scorecards[KEY];
+  assert.deepEqual(Object.keys(cards).sort(), ["Maya", "Sam"]);
+  const { at, ...maya } = cards.Maya;
+  assert.ok(at);
+  assert.deepEqual(maya, {
+    ratings: { kitchen: 4, damp: 2 }, lease_ok: true, deposit_asked: false, note: "basement bedroom is tiny",
+  });
+  assert.deepEqual(cards.Sam.ratings, { kitchen: 2 });
+  assert.equal(cards.Sam.lease_ok, null);
+  assert.equal(cards.Sam.deposit_asked, true);
+  assert.equal(cards.Sam.note, "");
+
+  // Saving again replaces the whole card (Maya's damp rating is gone)
+  assert.equal(await save("Maya", { ratings: { kitchen: 5 }, note: "x".repeat(600) }), true);
+  const again = (await state(db)).scorecards[KEY].Maya;
+  assert.deepEqual(again.ratings, { kitchen: 5 });
+  assert.equal(again.lease_ok, null);
+  assert.equal(again.note.length, 500);
+});
+
+test("scorecards: an empty card removes mine; bad ratings and strangers are refused", async () => {
+  const db = await fresh();
+  const save = (m, card) =>
+    page(db, "select group_save_scorecard($1, $2, $3, $4) as ok", [CODE, KEY, m, card]).then((r) => r.rows[0].ok);
+  await save("Maya", { ratings: { kitchen: 4 } });
+  assert.equal(await save("Maya", { ratings: { kitchen: null }, lease_ok: null, note: "   " }), false);
+  assert.equal(await save("Sam", null), false);
+  assert.deepEqual((await state(db)).scorecards, {});
+
+  for (const bad of [0, 6, 3.5, "4", true]) {
+    await assert.rejects(save("Maya", { ratings: { heating: bad } }), /bad rating for heating/, String(bad));
+  }
+  await assert.rejects(save("Eve", { ratings: { kitchen: 4 } }), /unknown member/);
+  // "yes" isn't true: only real true/false count, anything else is left blank
+  await save("Maya", { ratings: { kitchen: 3 }, lease_ok: "yes" });
+  assert.equal((await state(db)).scorecards[KEY].Maya.lease_ok, null);
+});
+
+test("scorecards: removing a member from the group removes their cards", async () => {
+  const db = await fresh();
+  await page(db, "select group_save_scorecard($1, $2, $3, $4)", [CODE, KEY, "Sam", { ratings: { noise: 1 } }]);
+  await db.exec("delete from members where name = 'Sam'");
+  assert.deepEqual((await state(db)).scorecards, {});
 });

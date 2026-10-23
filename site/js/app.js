@@ -7,6 +7,9 @@ import {
   money, parseInviteInput, parseJoinHash, shareText, shortlist, sortListings, statusOf, votesFor, walkLabel, formatDate, costOf,
 } from "./logic.js";
 import { MIN_VOTES, budgetCheck, groupProfile, readiness, suggest } from "./recommend.js";
+import { MAX_COMPARE, compareRows, togglePick } from "./compare.js";
+import { cleanScorecard, scorecardSummary, scorecardsFor } from "./scorecard.js";
+import { compareHtml, pickRow, scorecardFormHtml, scorecardGroupHtml } from "./viewing-ui.js";
 import { mapPoints } from "./mapdata.js";
 import { legendHtml, renderMap } from "./map.js";
 import { Deck } from "./swipe.js";
@@ -34,6 +37,10 @@ const app = {
   why: {}, // "why suggested" reasons for each card in the deck, by house key
   seen: null, // houses that were already here on my previous visit (null on a first visit)
   detailKey: null,
+  scoreOpen: null, // the house whose scorecard form I have open
+  scoreDrafts: prefs.get("scoreDrafts", {}), // my unsaved scorecards, by "me|house key"
+  picking: false, // Shortlist: picking houses to compare
+  picks: prefs.get("comparePicks", []), // houses picked to compare, in column order
 };
 
 // ---------- data ----------
@@ -280,8 +287,9 @@ function showMatch(l) {
 
 function renderShortlist() {
   const items = shortlist(app.listings, store.state, members);
+  if (app.picking) return renderPicking(items);
   $("shortlist").innerHTML = items.length
-    ? items.map((l) => {
+    ? compareStart(items) + items.map((l) => {
         const match = isMatch(store.state, l.key, members);
         return (match ? '<div class="chip good" style="align-self:flex-start;margin-top:10px">Match: everyone liked it</div>' : "") +
           listRow(l, store.state, { members, showLikes: true });
@@ -489,6 +497,9 @@ function renderDetail() {
     <div class="seg">${STATUSES.map((s) => `<button class="pill ${s === status ? "on" : ""}" type="button" data-status="${s}">${STATUS_LABELS[s]}</button>`).join("")}</div>
     ${store.state.status[l.key]?.by ? `<div class="faint tiny" style="margin-top:6px">Set by ${esc(store.state.status[l.key].by)}</div>` : ""}
 
+    <h3>Viewing notes</h3>
+    <div id="scorecard">${scorecardSection(l)}</div>
+
     <h3>Notes</h3>
     ${notes.map((n) => `<div class="note"><span class="avatar">${esc(initials(n.member))}</span><span><span class="faint tiny" style="display:block">${esc(n.member)} · ${esc(new Date(n.at).toLocaleDateString("en-CA", { month: "short", day: "numeric" }))}</span>${esc(n.text)}</span></div>`).join("") || '<p class="muted small">No notes yet. Add things like "basement rooms are tiny" or "landlord replied fast".</p>'}
     <form class="note-form" id="note-form">
@@ -521,6 +532,172 @@ async function share(key) {
   } catch {
     toast("Couldn't share. Long-press the listing link instead");
   }
+}
+
+// ---------- Viewing scorecard (on the detail sheet) ----------
+
+// My answers stay a draft on this phone (even through a reload) until I tap Save.
+const draftKey = (key) => `${app.me}|${key}`;
+const savedCard = (key) => scorecardsFor(store.state, key)[app.me];
+const myCard = (key) => app.scoreDrafts[draftKey(key)] ?? savedCard(key) ?? cleanScorecard();
+
+function setDraft(key, card) {
+  const { [draftKey(key)]: _, ...rest } = app.scoreDrafts;
+  // Back to exactly what's saved (or to blank, with nothing saved): no longer a draft
+  let same = false;
+  try {
+    same = JSON.stringify(cleanScorecard(card)) === JSON.stringify(cleanScorecard(savedCard(key) ?? {}));
+  } catch {
+    // a rating that isn't 1–5 can't happen from the buttons; keep it as a draft if it does
+  }
+  app.scoreDrafts = same ? rest : { ...rest, [draftKey(key)]: card };
+  prefs.set("scoreDrafts", app.scoreDrafts);
+}
+
+function scorecardSection(l) {
+  const summary = scorecardSummary(scorecardsFor(store.state, l.key), members);
+  const saved = savedCard(l.key);
+  const dirty = Boolean(app.scoreDrafts[draftKey(l.key)]);
+  const intro = summary.people.length
+    ? ""
+    : '<p class="muted small" style="margin-top:0">Rate the house during or after a viewing. Everyone fills in their own, and the group\'s averages show up here.</p>';
+  const mine = app.me && (app.scoreOpen === l.key || dirty)
+    ? scorecardFormHtml(myCard(l.key), { dirty, saved: Boolean(saved) })
+    : `<button class="btn" type="button" data-score-open style="width:100%;margin-top:10px"><i class="ti ti-clipboard-check" aria-hidden="true"></i> ${saved ? "Edit your scorecard" : "Fill in your scorecard"}</button>`;
+  return intro + scorecardGroupHtml(summary) + mine;
+}
+
+function renderScorecard() {
+  const l = app.byKey[app.detailKey];
+  if (l && $("scorecard")) $("scorecard").innerHTML = scorecardSection(l);
+}
+
+// Typing the note doesn't redraw the form (that would close the phone's keyboard): just the buttons.
+function syncScoreButtons(key) {
+  const box = $("scorecard");
+  const dirty = Boolean(app.scoreDrafts[draftKey(key)]);
+  box.querySelector("[data-score-save]").disabled = !dirty;
+  box.querySelector("[data-score-cancel]").textContent = dirty ? "Discard changes" : "Close";
+  box.querySelector("[data-score-unsaved]").hidden = !dirty;
+}
+
+async function saveMyScorecard(l, button) {
+  const draft = app.scoreDrafts[draftKey(l.key)];
+  if (!draft) return;
+  button.disabled = true;
+  let saved;
+  try {
+    saved = await store.saveScorecard(l.key, app.me, draft);
+  } catch (err) {
+    button.disabled = false;
+    toast(err instanceof GroupError ? err.message : "Couldn't save that. Check your answers and try again.");
+    return; // the draft stays, so nothing typed is lost
+  }
+  setDraft(l.key, savedCard(l.key) ?? {});
+  app.scoreOpen = null;
+  renderDetail();
+  toast(saved ? "Scorecard saved" : "Your scorecard was removed");
+}
+
+async function onScorecardClick(e) {
+  const t = e.target.closest("[data-score],[data-check],[data-score-open],[data-score-cancel],[data-score-save]");
+  const l = app.byKey[app.detailKey];
+  if (!t || !l) return;
+  if (!app.me) return askWho();
+  if (t.dataset.scoreSave !== undefined) return saveMyScorecard(l, t);
+  if (t.dataset.scoreOpen !== undefined) app.scoreOpen = l.key;
+  else if (t.dataset.scoreCancel !== undefined) {
+    setDraft(l.key, savedCard(l.key) ?? {});
+    app.scoreOpen = null;
+  } else {
+    const card = cleanScorecard(myCard(l.key));
+    card.note = $("score-note")?.value ?? card.note; // keep the note exactly as typed
+    if (t.dataset.score) {
+      const v = Number(t.dataset.value);
+      if (card.ratings[t.dataset.score] === v) delete card.ratings[t.dataset.score]; // tap again to clear
+      else card.ratings[t.dataset.score] = v;
+    } else {
+      const v = t.dataset.value === "yes";
+      card[t.dataset.check] = card[t.dataset.check] === v ? null : v;
+    }
+    setDraft(l.key, card);
+  }
+  renderScorecard();
+}
+
+// Redraw without losing what's being typed: put the focus and cursor back in the same box.
+function keepTyping(box, draw) {
+  const el = document.activeElement;
+  const id = el && box.contains(el) && el.id && /^(INPUT|TEXTAREA)$/.test(el.tagName) ? el.id : null;
+  const typed = id && { value: el.value, start: el.selectionStart, end: el.selectionEnd };
+  draw();
+  const again = id && document.getElementById(id);
+  if (!again) return;
+  again.value = typed.value;
+  again.focus({ preventScroll: true });
+  again.setSelectionRange?.(typed.start, typed.end);
+}
+
+// ---------- Compare (from the Shortlist) ----------
+
+function compareStart(items) {
+  if (items.length < 2) return "";
+  return `<div class="compare-start"><span class="muted small">${items.length} houses</span><button class="pill" type="button" data-compare-start><i class="ti ti-layout-columns" aria-hidden="true"></i> Compare</button></div>`;
+}
+
+function setPicks(picks) {
+  app.picks = picks;
+  prefs.set("comparePicks", picks);
+}
+
+function renderPicking(items) {
+  const onList = new Set(items.map((l) => l.key));
+  if (app.picks.some((k) => !onList.has(k))) setPicks(app.picks.filter((k) => onList.has(k)));
+  const n = app.picks.length;
+  $("shortlist").innerHTML = `
+    <p class="small" style="margin:0 0 4px"><b>Pick 2 or 3 houses</b> to see side by side.</p>
+    ${items.map((l) => pickRow(l, app.picks.indexOf(l.key) + 1)).join("")}
+    <div class="compare-bar">
+      <button class="btn" type="button" data-compare-done>Done</button>
+      <button class="btn btn-ink" type="button" data-compare-go ${n >= 2 ? "" : "disabled"}>${n >= 2 ? `Compare ${n}` : `Pick ${2 - n} more`}</button>
+    </div>`;
+}
+
+function renderCompare() {
+  const houses = app.picks.map((k) => app.byKey[k]).filter(Boolean);
+  $("compare").innerHTML = `<div class="sheet-grab"></div>
+    <h2 class="serif" style="font-size:30px;margin:0 0 10px">Compare</h2>
+    ${compareHtml(houses, compareRows(houses, store.state, members))}`;
+}
+
+function onShortlistClick(e) {
+  const t = e.target.closest("[data-pick],[data-compare-start],[data-compare-done],[data-compare-go]");
+  if (!t) return;
+  if (t.dataset.compareGo !== undefined) {
+    renderCompare();
+    $("compare-sheet").showModal();
+    $("compare-sheet").scrollTop = 0;
+    return;
+  }
+  if (t.dataset.pick) {
+    const next = togglePick(app.picks, t.dataset.pick);
+    if (next.full) return toast(`Compare up to ${MAX_COMPARE} houses at a time. Tap one to drop it first.`);
+    setPicks(next.picks);
+  } else {
+    app.picking = t.dataset.compareStart !== undefined;
+  }
+  renderShortlist();
+}
+
+function bindViewing() {
+  $("detail").addEventListener("click", onScorecardClick);
+  $("detail").addEventListener("input", (e) => {
+    if (e.target.id !== "score-note" || !app.detailKey) return;
+    setDraft(app.detailKey, { ...cleanScorecard(myCard(app.detailKey)), note: e.target.value });
+    syncScoreButtons(app.detailKey);
+  });
+  $("detail-sheet").addEventListener("close", () => (app.scoreOpen = null));
+  $("shortlist").addEventListener("click", onShortlistClick);
 }
 
 // ---------- Filters ----------
@@ -777,6 +954,7 @@ function bindEvents() {
       if (e.target === dlg) dlg.close();
     });
   }
+  bindViewing();
 }
 
 // ---------- start ----------
@@ -816,7 +994,8 @@ async function start() {
   voting = new Voting(store, () => members);
   store.onChange((state, info) => {
     if (info?.remote) render(); // someone else's change (another tab, or the group database)
-    if (app.detailKey && $("detail-sheet").open) renderDetail();
+    if (app.detailKey && $("detail-sheet").open) keepTyping($("detail"), renderDetail);
+    if ($("compare-sheet").open) renderCompare();
   });
 
   // First visit: default the group-size filter to the number of people in the group.
