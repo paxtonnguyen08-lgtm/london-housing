@@ -8,6 +8,7 @@ import {
 } from "./logic.js";
 import { MIN_VOTES, budgetCheck, groupProfile, readiness, suggest } from "./recommend.js";
 import { mapPoints } from "./mapdata.js";
+import { ALERTS_TEXT, alertsState, currentSubscription, isIos, isStandalone, pushSupported, turnOffAlerts, turnOnAlerts } from "./push.js";
 import { legendHtml, renderMap } from "./map.js";
 import { Deck } from "./swipe.js";
 import {
@@ -34,6 +35,8 @@ const app = {
   why: {}, // "why suggested" reasons for each card in the deck, by house key
   seen: null, // houses that were already here on my previous visit (null on a first visit)
   detailKey: null,
+  alertsOn: false, // this phone has a working push subscription (see push.js)
+  alertsBusy: false,
 };
 
 // ---------- data ----------
@@ -415,6 +418,8 @@ function renderGroup() {
     </div>
     ${budgetReality()}
 
+    ${alertsSection()}
+
     <div class="section-head"><h2>Invite your group</h2></div>
     ${invite
       ? `<div class="invite"><code>${esc(invite)}</code><button class="pill" type="button" id="copy-invite">Copy</button></div>
@@ -426,7 +431,7 @@ function renderGroup() {
     ${joinForm()}
 
     <div class="section-head"><h2>Add to Home Screen</h2></div>
-    <p class="muted small" style="margin-top:4px">On iPhone: tap <i class="ti ti-share" aria-hidden="true"></i> Share in Safari, then <b>Add to Home Screen</b>. It opens like an app, and later that's how alerts reach your phone.</p>
+    <p class="muted small" style="margin-top:4px">On iPhone: tap <i class="ti ti-share" aria-hidden="true"></i> Share in Safari, then <b>Add to Home Screen</b>. It opens like an app, and it's the only way alerts reach an iPhone.</p>
 
     <div class="section-head"><h2>Hidden houses</h2><span class="muted small">${rejected.length}</span></div>
     <div class="list">${rejected.map((l) => listRow(l, store.state, { members })).join("") || '<p class="muted small">Houses marked "Rejected" go here.</p>'}</div>
@@ -434,6 +439,90 @@ function renderGroup() {
     <div class="section-head"><h2>Data</h2></div>
     <p class="muted small" style="margin-top:4px">${app.sample ? "Showing sample houses until the scraper's first run." : `Last updated ${esc(new Date(app.lastRun).toLocaleString("en-CA", { dateStyle: "medium", timeStyle: "short" }))}.`}</p>
     <button class="btn" type="button" id="switch-person" style="margin-top:8px">Switch person</button>`;
+}
+
+// ---------- phone alerts ----------
+
+function alertsNow() {
+  return alertsState({
+    hasKey: Boolean(CONFIG.vapidPublicKey),
+    supported: pushSupported(window),
+    ios: isIos(navigator),
+    standalone: isStandalone(window),
+    shared: store.shared,
+    me: app.me,
+    permission: pushSupported(window) ? Notification.permission : "default",
+    subscribed: app.alertsOn,
+  });
+}
+
+function alertsSection() {
+  const state = alertsNow();
+  const button = {
+    off: `<button class="btn btn-ink" type="button" id="alerts-on" ${app.alertsBusy ? "disabled" : ""}><i class="ti ti-bell" aria-hidden="true"></i> Turn on alerts</button>`,
+    on: `<button class="btn" type="button" id="alerts-off" ${app.alertsBusy ? "disabled" : ""}>Turn off on this phone</button>`,
+  }[state] || "";
+  return `
+    <div class="section-head"><h2>Phone alerts</h2>${state === "on" ? '<span class="good small"><i class="ti ti-bell-ringing" aria-hidden="true"></i> On</span>' : ""}</div>
+    <p class="muted small" style="margin-top:4px">${esc(ALERTS_TEXT[state])}</p>
+    ${button}`;
+}
+
+// Check whether this phone is subscribed, and keep the saved address filed under the right name.
+async function syncAlerts() {
+  if (!CONFIG.vapidPublicKey) return;
+  try {
+    const sub = await currentSubscription({ win: window, key: CONFIG.vapidPublicKey });
+    app.alertsOn = Boolean(sub);
+    const saved = sub && `${sub.endpoint}|${app.me}`;
+    if (sub && store.shared && app.me && prefs.get("alertsSaved") !== saved) {
+      await store.savePushSub(app.me, sub.toJSON());
+      prefs.set("alertsSaved", saved);
+    }
+  } catch (err) {
+    console.warn("Couldn't check phone alerts", err); // the button still works
+  }
+  if (app.tab === "group") renderGroup();
+}
+
+async function alertsOn() {
+  app.alertsBusy = true;
+  renderGroup();
+  try {
+    const result = await turnOnAlerts({
+      win: window,
+      key: CONFIG.vapidPublicKey,
+      save: (sub) => store.savePushSub(app.me, sub),
+    });
+    app.alertsOn = result.ok;
+    if (result.ok) {
+      prefs.set("alertsSaved", `${result.sub.endpoint}|${app.me}`);
+      toast("Alerts on. You'll hear about new houses here");
+    } else if (result.permission === "denied") {
+      toast("Alerts are blocked. See the steps on this page");
+    }
+  } catch (err) {
+    console.error(err);
+    toast(err instanceof GroupError ? err.message : "Couldn't turn on alerts. Try again in a minute");
+  }
+  app.alertsBusy = false;
+  renderGroup();
+}
+
+async function alertsOff() {
+  app.alertsBusy = true;
+  renderGroup();
+  try {
+    await turnOffAlerts({ win: window });
+    app.alertsOn = false;
+    prefs.set("alertsSaved", null);
+    toast("Alerts off on this phone");
+  } catch (err) {
+    console.error(err);
+    toast("Couldn't turn off alerts. Try again");
+  }
+  app.alertsBusy = false;
+  renderGroup();
 }
 
 async function saveBudget(e) {
@@ -568,6 +657,7 @@ function setMe(name) {
   $("onboard").hidden = true;
   deck.show([]);
   render();
+  syncAlerts();
 }
 
 function handleJoinLink() {
@@ -732,6 +822,8 @@ function bindEvents() {
   });
   $("group").addEventListener("click", async (e) => {
     if (e.target.closest("#switch-person")) askWho();
+    if (e.target.closest("#alerts-on")) alertsOn();
+    if (e.target.closest("#alerts-off")) alertsOff();
     if (e.target.closest("#copy-invite")) {
       try {
         await navigator.clipboard.writeText($("group").querySelector(".invite code").textContent);
@@ -809,9 +901,23 @@ function showGroupBanner(text, { join = false } = {}) {
   $("group-banner").hidden = false;
 }
 
+// A tapped alert opens ?tab=shortlist or ?tab=discover. Take it, then tidy the address.
+function handleTabLink() {
+  const params = new URLSearchParams(location.search);
+  const tab = params.get("tab");
+  if (!tab) return;
+  if (document.getElementById(`tab-${tab}`)) app.tab = tab;
+  params.delete("tab");
+  const rest = params.toString();
+  history.replaceState(null, "", location.pathname + (rest ? `?${rest}` : "") + location.hash);
+}
+
 async function start() {
   handleJoinLink();
+  handleTabLink();
   bindEvents();
+  // The service worker shows phone alerts (sw.js). It caches nothing, so it never serves stale pages.
+  if (pushSupported(window)) navigator.serviceWorker.register("sw.js").catch((err) => console.warn("No service worker", err));
   store = await connectStore();
   voting = new Voting(store, () => members);
   store.onChange((state, info) => {
@@ -844,6 +950,7 @@ async function start() {
 
   setTab(app.tab);
   if (!app.me || !members.includes(app.me)) askWho();
+  syncAlerts();
 }
 
 start();

@@ -219,3 +219,13 @@ test("polling skips refreshes while the app is in the background", async () => {
   await new Promise((r) => setTimeout(r, 10));
   assert.equal(loads, 2);
 });
+
+test("savePushSub files this phone's push address under my name, with the code", async () => {
+  const sub = { endpoint: "https://web.push.apple.com/abc", keys: { p256dh: "p", auth: "a" } };
+  const { store, calls } = make({ save_push_sub: undefined });
+  await store.savePushSub("Paxton", sub);
+  assert.equal(calls[0].name, "save_push_sub");
+  assert.deepEqual(calls[0].body, { p_code: "our-secret-code", p_member: "Paxton", p_sub: sub });
+  const broken = make({ save_push_sub: new Error("bad group code") });
+  await assert.rejects(broken.store.savePushSub("Paxton", sub), (err) => err instanceof GroupError && /isn't valid/.test(err.message));
+});

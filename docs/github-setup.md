@@ -115,6 +115,52 @@ Secrets stay hidden. Even you can't view them again after saving, and they never
 
 Then open `email-preview.html` in your browser. It only has content when the latest scrape found new houses.
 
+## 6d. Phone alerts
+
+After each daily scrape, the **Send phone alerts** step pings everyone who turned alerts on:
+- **New houses:** one alert per person about houses that are new that morning and fit them. "Fit" means:
+  - the cost per person (utilities included) is within that person's budget on the Group tab, or $1,200 if they haven't set one;
+  - it's at most a 45-minute walk.
+  Several houses arrive as one summary alert, not one alert each.
+- **Matches:** "Everyone liked {house}" goes to the whole group, once per house. This is checked in the same morning run, so it can come up to a day after the last like. Whoever makes the match still sees "It's a match" in the app right away.
+
+**1. Update the database (once).** In Supabase, open **SQL Editor**, paste all of `supabase/schema.sql`, and press **Run**. This adds a small `push_sent` table and lets the daily job read budgets and likes. It's safe to run again and changes nobody's votes.
+
+**2. Add one secret on GitHub.** Go to **Settings → Secrets and variables → Actions → New repository secret**:
+
+| Name | Value |
+|---|---|
+| `VAPID_PRIVATE_KEY` | the one line in `~/.config/london-housing/vapid-private-key.txt` on Paxton's laptop |
+
+`SUPABASE_URL` and `SUPABASE_SERVICE_KEY` must already be there (`supabase/SETUP.md`, step 8). To copy the key without opening the file:
+
+```bash
+pbcopy < ~/.config/london-housing/vapid-private-key.txt
+```
+
+**About the key pair.** Alerts are signed with a private key, so only your daily job can send to your phones. The public half is `vapidPublicKey` in `site/js/config.js`, and it's fine for anyone to see. The private half must **never** go in the repo. If it's ever lost or leaked, make a new pair:
+1. Run `.venv/bin/python -m scraper.notify --new-keys ~/.config/london-housing/vapid-private-key-2.txt`.
+2. Put the public key it prints into `config.js`.
+3. Update the secret.
+4. Everyone taps **Turn on alerts** again.
+
+**3. Turn alerts on, on each phone.**
+- **iPhone (iOS 16.4 or newer).** Alerts only work from the Home Screen app, never in a Safari tab:
+  1. In Safari, tap **Share → Add to Home Screen**.
+  2. Open House Hunt from the new icon. Paste the invite link if it asks, and pick your name.
+  3. Go to **Group → Turn on alerts → Allow**.
+- **Android.** In Chrome, go to **Group → Turn on alerts → Allow**.
+
+**4. Test it.** Go to **Actions → Test phone alert → Run workflow**, type your name (or `everyone`) and run it. Within a minute your phone shows "Test alert". The run turns red if nobody with that name has alerts on.
+
+**If it goes wrong:**
+- The alert step turns red, but the scrape and the website carry on: an alert problem never blocks them.
+- The log shows counts only. It never shows houses or phone addresses, because run logs on a public repo are public.
+- **"doesn't match vapidPublicKey"**: the secret isn't the private key that goes with the public key in `config.js`.
+- **"permission denied" or a missing table**: run `schema.sql` again (step 1).
+- **"The push service refused it (403)"** on iPhones only: add a repository variable `VAPID_SUBJECT` set to `mailto:` plus your email. Apple and Google see this contact with every alert; by default it's the site's address.
+- A phone that turned alerts off, or deleted the app, gets removed on its own.
+
 ## 7. Working on your laptop after that
 
 The bot commits to GitHub every day, so your laptop copy falls behind. **Before you change anything, get the latest:** in GitHub Desktop click **Fetch origin**, then **Pull origin**. After changing things: write a summary, **Commit to main**, then **Push origin**.
@@ -131,4 +177,4 @@ If you forget and GitHub Desktop says your branch has diverged, click **Pull ori
 ## Coming later
 
 - **Supabase secrets.** Once you've set up Supabase (`supabase/SETUP.md`), add `SUPABASE_URL` and `SUPABASE_SERVICE_KEY` under Settings → Secrets and variables → Actions → **New repository secret**. Step 8 of that guide says where each value comes from. You can do this as soon as Supabase exists, without waiting for alerts: the daily scrape's last step, **Keep Supabase awake**, then reads from it every morning so the free project never pauses. Until the secrets exist, that step skips itself.
-- **Phone push alerts** (Phase 3): same Secrets page. Claude will tell you each name and where its value comes from.
+- **Phone push alerts**: see section 6d.

@@ -86,7 +86,7 @@ The part after `#` never leaves the phone: browsers don't send it to any server.
 
 ## 8. Give the daily GitHub job its keys (as soon as your GitHub repo exists)
 
-The daily scrape job pings Supabase each morning so the free project never pauses. Later it'll also use this to send phone alerts. It needs two values, stored as GitHub **secrets** (hidden, never shown in the code):
+The daily scrape job pings Supabase each morning so the free project never pauses. It also uses this to send phone alerts (`docs/github-setup.md`, 6d). It needs two values, stored as GitHub **secrets** (hidden, never shown in the code):
 1. Repo on GitHub → **Settings** → **Secrets and variables** → **Actions** → **New repository secret**.
 2. Add `SUPABASE_URL` (the Project URL from step 5).
 3. Add `SUPABASE_SERVICE_KEY`: in Supabase, **Project Settings** → **API Keys**, the **secret** key (`sb_secret_...`) or, on the legacy tab, **service_role**. Click reveal, then copy.
@@ -108,6 +108,7 @@ If you haven't made the GitHub repo yet, skip this for now. `docs/github-setup.m
 - the page can't read tables directly
 - every function rejects a wrong code
 - votes, notes, statuses, budgets and push subscriptions follow the same rules as the page
+- the daily job's secret key can only do what phone alerts need: it can't read the group code or notes
 
 ```bash
 cd supabase

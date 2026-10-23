@@ -70,6 +70,20 @@ jobs:
           SITE_URL: ${{ vars.SITE_URL || format('https://{0}.github.io/{1}/', github.repository_owner, github.event.repository.name) }}
         run: python -m alerts.email_digest
 
+      # Phone alerts: one per person about new houses within their budget, and "Everyone liked …"
+      # when the whole group likes the same house. Skipped until the VAPID_PRIVATE_KEY secret is
+      # added (docs/github-setup.md, 6d). The log shows counts only, never houses or phone addresses.
+      - name: Send phone alerts
+        continue-on-error: true # an alert problem must never stop the website from updating
+        env:
+          PYTHONWARNINGS: ignore
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+          VAPID_PRIVATE_KEY: ${{ secrets.VAPID_PRIVATE_KEY }}
+          VAPID_SUBJECT: ${{ vars.VAPID_SUBJECT }}
+          SITE_URL: ${{ vars.SITE_URL || format('https://{0}.github.io/{1}/', github.repository_owner, github.event.repository.name) }}
+        run: python -m scraper.notify
+
       # Free Supabase projects pause after about a week without activity. One tiny read a day
       # keeps the group's votes online. Skipped until the two secrets are added (supabase/SETUP.md).
       - name: Keep Supabase awake

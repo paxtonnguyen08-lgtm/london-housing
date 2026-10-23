@@ -1,5 +1,5 @@
 -- Shared group state for the house finder: votes, notes, status per house, budgets,
--- and phone push subscriptions.
+-- phone push subscriptions, and which match alerts were already sent.
 --
 -- How to use: paste this whole file into Supabase's SQL editor and press Run.
 -- It's safe to run again later (it only creates what's missing and replaces functions).
@@ -57,6 +57,14 @@ create table if not exists push_subs (
   created_at timestamptz not null default now()
 );
 
+-- Alerts the daily job already sent, so "Everyone liked …" goes out once per house.
+create table if not exists push_sent (
+  kind text not null check (kind in ('match')),
+  listing_key text not null check (length(listing_key) between 1 and 200),
+  sent_at timestamptz not null default now(),
+  primary key (kind, listing_key)
+);
+
 -- Lock every table: the page can't read or write them directly.
 alter table settings enable row level security;
 alter table members enable row level security;
@@ -64,10 +72,15 @@ alter table votes enable row level security;
 alter table notes enable row level security;
 alter table listing_status enable row level security;
 alter table push_subs enable row level security;
-revoke all on settings, members, votes, notes, listing_status, push_subs from public, anon, authenticated;
--- The daily GitHub job (secret key = service_role) reads push_subs: to keep the free project
--- awake, and later to send phone alerts. Needed when "Automatically expose new tables" is off.
-grant select on push_subs to service_role;
+alter table push_sent enable row level security;
+revoke all on settings, members, votes, notes, listing_status, push_subs, push_sent from public, anon, authenticated;
+-- The daily GitHub job (secret key = service_role) sends the phone alerts (scraper/notify.py).
+-- It reads the phones' addresses, budgets and likes; removes phones that turned alerts off; and
+-- notes which matches it announced. It never sees the group code or notes.
+-- These grants are needed when "Automatically expose new tables" is off.
+grant select, delete on push_subs to service_role;
+grant select on members, votes to service_role;
+grant select, insert on push_sent to service_role;
 
 -- ---------- helpers (not callable from the page) ----------
 

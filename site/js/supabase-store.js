@@ -168,4 +168,9 @@ export class SupabaseGroupStore {
     }
     return Boolean(ok);
   }
+
+  // This phone's push address (from push.js), so the daily job can send alerts to it
+  async savePushSub(member, sub) {
+    await this.rpc("save_push_sub", { p_member: member, p_sub: sub });
+  }
 }
