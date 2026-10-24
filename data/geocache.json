@@ -14,6 +14,11 @@
   "lng": -81.2556396,
   "precision": "house"
  },
+ "105 huron st": {
+  "lat": 43.0053398,
+  "lng": -81.2647922,
+  "precision": "house"
+ },
  "1064 richmond street": {
   "lat": 43.005003,
   "lng": -81.257887,
@@ -94,6 +99,16 @@
   "lng": -81.2560347,
   "precision": "house"
  },
+ "134.5 mill street": {
+  "lat": 42.9921538,
+  "lng": -81.2539598,
+  "precision": "street"
+ },
+ "140 huron": {
+  "lat": 43.0056576,
+  "lng": -81.2643404,
+  "precision": "house"
+ },
  "140 mill street": {
   "lat": 42.9919194,
   "lng": -81.2550966,
@@ -115,6 +130,17 @@
   "precision": "house"
  },
  "144 victoria": null,
+ "15 stirrup court": null,
+ "150 mill street": {
+  "lat": 42.9920308,
+  "lng": -81.2547017,
+  "precision": "house"
+ },
+ "1511 richmond st": {
+  "lat": 43.017094,
+  "lng": -81.273715,
+  "precision": "house"
+ },
  "152 wilson": {
   "lat": 42.9887505,
   "lng": -81.2605083,
@@ -269,6 +295,11 @@
  "223 bernard ave.": {
   "lat": 43.011927,
   "lng": -81.2627068,
+  "precision": "house"
+ },
+ "223 sunnyside dr": {
+  "lat": 43.0229418,
+  "lng": -81.264516,
   "precision": "house"
  },
  "225 bernard ave": {
