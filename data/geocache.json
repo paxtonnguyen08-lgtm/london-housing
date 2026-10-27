@@ -29,6 +29,11 @@
   "lng": -81.2765063,
   "precision": "house"
  },
+ "1095 western rd.": {
+  "lat": 43.0004075,
+  "lng": -81.2765259,
+  "precision": "house"
+ },
  "1099 western rd.": {
   "lat": 43.0004752,
   "lng": -81.2765324,
@@ -42,6 +47,11 @@
  "1104 sunset": {
   "lat": 43.005816,
   "lng": -81.2647014,
+  "precision": "house"
+ },
+ "1109 richmond street": {
+  "lat": 43.0072672,
+  "lng": -81.2596342,
   "precision": "house"
  },
  "112 north centre rd": {
@@ -69,6 +79,11 @@
   "lng": -81.2554899,
   "precision": "house"
  },
+ "12 audrey avenue": {
+  "lat": 43.0069011,
+  "lng": -81.2617761,
+  "precision": "street"
+ },
  "12 christie st": {
   "lat": 43.0064772,
   "lng": -81.2514414,
@@ -79,9 +94,25 @@
   "lng": -81.2631145,
   "precision": "house"
  },
+ "121 wharncliffe rd n": {
+  "lat": 42.9865216,
+  "lng": -81.2627556,
+  "precision": "house"
+ },
  "123 regent st": {
   "lat": 43.0042472,
   "lng": -81.2636402,
+  "precision": "house"
+ },
+ "125 paul st main unit": null,
+ "126 woodward": {
+  "lat": 42.9876399,
+  "lng": -81.2704392,
+  "precision": "house"
+ },
+ "127 mill street": {
+  "lat": 42.991564,
+  "lng": -81.2556902,
   "precision": "house"
  },
  "128b wharncliffe": {
@@ -92,6 +123,11 @@
  "129 john street": {
   "lat": 42.9906833,
   "lng": -81.2550389,
+  "precision": "house"
+ },
+ "13 mcdonald ave": {
+  "lat": 42.9944897,
+  "lng": -81.2673569,
   "precision": "house"
  },
  "133 ann street": {
@@ -130,6 +166,21 @@
   "precision": "house"
  },
  "144 victoria": null,
+ "145 john st.": {
+  "lat": 42.9908881,
+  "lng": -81.2543172,
+  "precision": "house"
+ },
+ "146 john st.": {
+  "lat": 42.991065,
+  "lng": -81.2543555,
+  "precision": "house"
+ },
+ "15 shavian": {
+  "lat": 43.021325,
+  "lng": -81.280078,
+  "precision": "house"
+ },
  "15 stirrup court": null,
  "150 mill street": {
   "lat": 42.9920308,
@@ -146,9 +197,19 @@
   "lng": -81.2605083,
   "precision": "house"
  },
+ "154 john st": {
+  "lat": 42.9911802,
+  "lng": -81.2539497,
+  "precision": "house"
+ },
  "1543 richmond st": {
   "lat": 43.020502,
   "lng": -81.2794553,
+  "precision": "house"
+ },
+ "1548 richmond st": {
+  "lat": 43.019541,
+  "lng": -81.27742,
   "precision": "house"
  },
  "1550 western rd": {
@@ -217,9 +278,19 @@
   "precision": "house"
  },
  "18 kenneth ave": null,
+ "181 st. george street": {
+  "lat": 42.9957615,
+  "lng": -81.2559747,
+  "precision": "house"
+ },
  "188 cambridge street": {
   "lat": 42.9888851,
   "lng": -81.2699201,
+  "precision": "house"
+ },
+ "190 cooper": {
+  "lat": 42.9889747,
+  "lng": -81.265003,
   "precision": "house"
  },
  "191 cooper": {
@@ -240,6 +311,16 @@
  "197 rathowen street": {
   "lat": 42.9890746,
   "lng": -81.2670173,
+  "precision": "house"
+ },
+ "200 sarnia rd": {
+  "lat": 43.0007596,
+  "lng": -81.2803871,
+  "precision": "house"
+ },
+ "200 sarnia rd.": {
+  "lat": 43.0007596,
+  "lng": -81.2803871,
   "precision": "house"
  },
  "201 edinburgh st": {
@@ -277,6 +358,11 @@
   "lng": -81.2676971,
   "precision": "house"
  },
+ "217 sarnia rd": {
+  "lat": 43.00212,
+  "lng": -81.276748,
+  "precision": "house"
+ },
  "217 sarnia rd.": {
   "lat": 43.001997,
   "lng": -81.277167,
@@ -292,6 +378,11 @@
   "lng": -81.2613606,
   "precision": "house"
  },
+ "222 rathowen st": {
+  "lat": 42.9902951,
+  "lng": -81.2679036,
+  "precision": "house"
+ },
  "223 bernard ave.": {
   "lat": 43.011927,
   "lng": -81.2627068,
@@ -305,6 +396,11 @@
  "225 bernard ave": {
   "lat": 43.01198,
   "lng": -81.2626003,
+  "precision": "house"
+ },
+ "226 epworth": {
+  "lat": 43.0105982,
+  "lng": -81.2606454,
   "precision": "house"
  },
  "227 bernard ave": {
@@ -325,6 +421,11 @@
  "236 raymond ave.": {
   "lat": 43.013002,
   "lng": -81.261082,
+  "precision": "house"
+ },
+ "239 raymond": {
+  "lat": 43.0129412,
+  "lng": -81.2614741,
   "precision": "house"
  },
  "255 trott drive": {
@@ -348,6 +449,11 @@
   "lat": 43.0173787,
   "lng": -81.1950661,
   "precision": "street"
+ },
+ "285 steele street": {
+  "lat": 43.0093087,
+  "lng": -81.2565511,
+  "precision": "house"
  },
  "3 stirrup court": null,
  "300 princess ave": {
@@ -425,9 +531,19 @@
   "lng": -81.2924304,
   "precision": "house"
  },
+ "44 essex street": {
+  "lat": 42.994738,
+  "lng": -81.2692551,
+  "precision": "house"
+ },
  "45 charles st": {
   "lat": 42.9851143,
   "lng": -81.2656131,
+  "precision": "house"
+ },
+ "46 essex": {
+  "lat": 42.9946931,
+  "lng": -81.2694076,
   "precision": "house"
  },
  "5 renwick avenue": {
@@ -490,6 +606,11 @@
   "lng": -81.2553995,
   "precision": "house"
  },
+ "642 richmond street": {
+  "lat": 42.991845,
+  "lng": -81.2510928,
+  "precision": "house"
+ },
  "664 talbot st": {
   "lat": 42.990821,
   "lng": -81.2556879,
@@ -546,6 +667,11 @@
   "lng": -81.2663913,
   "precision": "house"
  },
+ "822 maitland": {
+  "lat": 43.0003951,
+  "lng": -81.2435421,
+  "precision": "house"
+ },
  "830 talbot street (main)": null,
  "830 talbot street (upper)": null,
  "90 oxford street west": {
@@ -573,6 +699,11 @@
   "lng": -81.2492374,
   "precision": "house"
  },
+ "974 western rd": {
+  "lat": 42.9962998,
+  "lng": -81.270483,
+  "precision": "house"
+ },
  "975 western rd.": {
   "lat": 42.9960648,
   "lng": -81.270681,
@@ -584,14 +715,22 @@
   "precision": "street"
  },
  "argyle st and empress ave": null,
+ "argyle street & empress avenue": null,
  "castlegrove pl & castlegrove blvd": null,
  "colborne st & oxford st east": null,
  "empress avenue  & wharncliffe road north": null,
  "ford crescent &  neville drive": null,
+ "foster avenue & oxford street west": null,
  "huron st&audrey st": null,
  "oxford & wharncliffe": null,
+ "oxford st &colborne st.": null,
  "oxford st&colborne st": null,
  "oxford street west & wharncliffe road north": null,
+ "western road & sarnia road": {
+  "lat": 43.0019212,
+  "lng": -81.2772605,
+  "precision": "street"
+ },
  "wharncliffe rd n & paul st": null,
  "wyatt st. & wharncliffe rd. s.": null,
  "wyatt street & wharncliffe road south": null
