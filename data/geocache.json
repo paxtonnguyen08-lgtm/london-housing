@@ -9,6 +9,11 @@
   "lng": -81.261784,
   "precision": "house"
  },
+ "100 regent street": {
+  "lat": 43.0038706,
+  "lng": -81.2656806,
+  "precision": "house"
+ },
  "1031 patricia st.": {
   "lat": 43.0085224,
   "lng": -81.2556396,
@@ -17,6 +22,11 @@
  "105 huron st": {
   "lat": 43.0053398,
   "lng": -81.2647922,
+  "precision": "house"
+ },
+ "1058 richmond": {
+  "lat": 43.004757,
+  "lng": -81.257761,
   "precision": "house"
  },
  "1064 richmond street": {
@@ -99,6 +109,11 @@
   "lng": -81.2627556,
   "precision": "house"
  },
+ "122 oxford street w": {
+  "lat": 42.9907891,
+  "lng": -81.2685005,
+  "precision": "house"
+ },
  "123 regent st": {
   "lat": 43.0042472,
   "lng": -81.2636402,
@@ -119,6 +134,11 @@
   "lat": 42.9818877,
   "lng": -81.262607,
   "precision": "street"
+ },
+ "129 castlegrove blvd": {
+  "lat": 42.9978056,
+  "lng": -81.2864842,
+  "precision": "house"
  },
  "129 john street": {
   "lat": 42.9906833,
@@ -174,6 +194,11 @@
  "146 john st.": {
   "lat": 42.991065,
   "lng": -81.2543555,
+  "precision": "house"
+ },
+ "146 paul street": {
+  "lat": 42.9881486,
+  "lng": -81.2658537,
   "precision": "house"
  },
  "15 shavian": {
@@ -383,6 +408,7 @@
   "lng": -81.2679036,
   "precision": "house"
  },
+ "222 university cresc": null,
  "223 bernard ave.": {
   "lat": 43.011927,
   "lng": -81.2627068,
@@ -416,6 +442,11 @@
  "231 rathowen": {
   "lat": 42.9907398,
   "lng": -81.2678697,
+  "precision": "house"
+ },
+ "234 bernard ave": {
+  "lat": 43.0126078,
+  "lng": -81.2617591,
   "precision": "house"
  },
  "236 raymond ave.": {
@@ -456,6 +487,11 @@
   "precision": "house"
  },
  "3 stirrup court": null,
+ "30 essex": {
+  "lat": 42.9950524,
+  "lng": -81.2681875,
+  "precision": "house"
+ },
  "300 princess ave": {
   "lat": 42.9894795,
   "lng": -81.2456488,
@@ -504,6 +540,11 @@
  "345 piccadilly": {
   "lat": 42.9959097,
   "lng": -81.2471499,
+  "precision": "house"
+ },
+ "354 windermere road": {
+  "lat": 43.0157051,
+  "lng": -81.2745461,
   "precision": "house"
  },
  "36 essex street, london on n6g 1b2": {
@@ -636,6 +677,11 @@
   "lng": -81.2631118,
   "precision": "house"
  },
+ "73 gunn st": {
+  "lat": 42.9957335,
+  "lng": -81.2633168,
+  "precision": "house"
+ },
  "733 wellington st": {
   "lat": 42.9959208,
   "lng": -81.2510384,
@@ -726,11 +772,14 @@
  "oxford st &colborne st.": null,
  "oxford st&colborne st": null,
  "oxford street west & wharncliffe road north": null,
+ "rollscourt gardens & castlegrove blvd": null,
+ "western rd & essex st": null,
  "western road & sarnia road": {
   "lat": 43.0019212,
   "lng": -81.2772605,
   "precision": "street"
  },
+ "wharncliffe rd & oxford st": null,
  "wharncliffe rd n & paul st": null,
  "wyatt st. & wharncliffe rd. s.": null,
  "wyatt street & wharncliffe road south": null
