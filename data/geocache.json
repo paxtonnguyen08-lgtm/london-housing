@@ -64,6 +64,11 @@
   "lng": -81.2596342,
   "precision": "house"
  },
+ "1115 sunset": {
+  "lat": 43.0063654,
+  "lng": -81.2652441,
+  "precision": "house"
+ },
  "112 north centre rd": {
   "lat": 43.029264,
   "lng": -81.27713,
@@ -282,6 +287,11 @@
   "lng": -81.2519655,
   "precision": "house"
  },
+ "161 oxford street w": {
+  "lat": 42.9903683,
+  "lng": -81.2709702,
+  "precision": "house"
+ },
  "163 oxford st w": {
   "lat": 42.990307,
   "lng": -81.2711889,
@@ -449,6 +459,11 @@
   "lng": -81.2617591,
   "precision": "house"
  },
+ "235 university cres": {
+  "lat": 43.0099552,
+  "lng": -81.2579698,
+  "precision": "house"
+ },
  "236 raymond ave.": {
   "lat": 43.013002,
   "lng": -81.261082,
@@ -457,6 +472,11 @@
  "239 raymond": {
   "lat": 43.0129412,
   "lng": -81.2614741,
+  "precision": "house"
+ },
+ "249 university cr": {
+  "lat": 43.010195,
+  "lng": -81.256522,
   "precision": "house"
  },
  "255 trott drive": {
@@ -652,6 +672,11 @@
   "lng": -81.2510928,
   "precision": "house"
  },
+ "652 talbot": {
+  "lat": 42.9904984,
+  "lng": -81.2555247,
+  "precision": "house"
+ },
  "664 talbot st": {
   "lat": 42.990821,
   "lng": -81.2556879,
@@ -720,6 +745,11 @@
  },
  "830 talbot street (main)": null,
  "830 talbot street (upper)": null,
+ "86 wilson avenue": {
+  "lat": 42.9860972,
+  "lng": -81.260384,
+  "precision": "house"
+ },
  "90 oxford street west": {
   "lat": 42.9913423,
   "lng": -81.2666146,
@@ -733,6 +763,11 @@
  "911 richmond st": {
   "lat": 43.0011838,
   "lng": -81.2562918,
+  "precision": "house"
+ },
+ "918 waterloo street": {
+  "lat": 43.0036352,
+  "lng": -81.251569,
   "precision": "house"
  },
  "96 doon drive": {
@@ -763,6 +798,7 @@
  "argyle st and empress ave": null,
  "argyle street & empress avenue": null,
  "castlegrove pl & castlegrove blvd": null,
+ "colborne st & grosvenor st": null,
  "colborne st & oxford st east": null,
  "empress avenue  & wharncliffe road north": null,
  "ford crescent &  neville drive": null,
