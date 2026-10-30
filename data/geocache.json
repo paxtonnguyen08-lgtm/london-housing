@@ -49,6 +49,11 @@
   "lng": -81.2765324,
   "precision": "house"
  },
+ "11 st george street": {
+  "lat": 42.9908686,
+  "lng": -81.2536315,
+  "precision": "house"
+ },
  "1100 sunset": {
   "lat": 43.005633,
   "lng": -81.264605,
@@ -333,6 +338,11 @@
   "lng": -81.2648593,
   "precision": "house"
  },
+ "191 cooper street": {
+  "lat": 42.9891819,
+  "lng": -81.2648593,
+  "precision": "house"
+ },
  "195 wharncliffe rd": {
   "lat": 42.9706159,
   "lng": -81.2620155,
@@ -552,6 +562,11 @@
   "lng": -81.1950661,
   "precision": "street"
  },
+ "342 central ave": {
+  "lat": 42.9919351,
+  "lng": -81.245366,
+  "precision": "house"
+ },
  "344 harvard street": {
   "lat": 42.9946861,
   "lng": -81.2458384,
@@ -590,6 +605,11 @@
  "422 castlegrove blvd": {
   "lat": 42.994297,
   "lng": -81.2924304,
+  "precision": "house"
+ },
+ "44 essex st": {
+  "lat": 42.994738,
+  "lng": -81.2692551,
   "precision": "house"
  },
  "44 essex street": {
@@ -657,6 +677,16 @@
   "lng": -81.254318,
   "precision": "house"
  },
+ "60 paperbirch crescent": {
+  "lat": 42.9954415,
+  "lng": -81.2957329,
+  "precision": "house"
+ },
+ "616 waterloo street": {
+  "lat": 42.9926235,
+  "lng": -81.2458828,
+  "precision": "house"
+ },
  "64 charles street": {
   "lat": 42.9846232,
   "lng": -81.2666412,
@@ -675,6 +705,11 @@
  "652 talbot": {
   "lat": 42.9904984,
   "lng": -81.2555247,
+  "precision": "house"
+ },
+ "655 waterloo street": {
+  "lat": 42.9935797,
+  "lng": -81.2466323,
   "precision": "house"
  },
  "664 talbot st": {
