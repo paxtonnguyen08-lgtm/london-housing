@@ -39,6 +39,16 @@
   "lng": -81.2765063,
   "precision": "house"
  },
+ "1088 richmond street": {
+  "lat": 43.0063814,
+  "lng": -81.2585937,
+  "precision": "house"
+ },
+ "1093 richmond st": {
+  "lat": 43.0063786,
+  "lng": -81.2589752,
+  "precision": "house"
+ },
  "1095 western rd.": {
   "lat": 43.0004075,
   "lng": -81.2765259,
@@ -302,6 +312,11 @@
   "lng": -81.2711889,
   "precision": "house"
  },
+ "165 john street": {
+  "lat": 42.9911385,
+  "lng": -81.2534355,
+  "precision": "house"
+ },
  "165 wharncliffe road north": {
   "lat": 42.9884338,
   "lng": -81.262863,
@@ -333,6 +348,16 @@
   "lng": -81.265003,
   "precision": "house"
  },
+ "190 oxford st e": {
+  "lat": 42.9952221,
+  "lng": -81.2545729,
+  "precision": "house"
+ },
+ "190 sarnia rd": {
+  "lat": 43.0008186,
+  "lng": -81.2801921,
+  "precision": "house"
+ },
  "191 cooper": {
   "lat": 42.9891819,
   "lng": -81.2648593,
@@ -341,6 +366,11 @@
  "191 cooper street": {
   "lat": 42.9891819,
   "lng": -81.2648593,
+  "precision": "house"
+ },
+ "191 sydenham st.": {
+  "lat": 42.9961405,
+  "lng": -81.2548119,
   "precision": "house"
  },
  "195 wharncliffe rd": {
@@ -489,6 +519,11 @@
   "lng": -81.256522,
   "precision": "house"
  },
+ "255 sydenham st": {
+  "lat": 42.9968365,
+  "lng": -81.2523967,
+  "precision": "house"
+ },
  "255 trott drive": {
   "lat": 42.9939709,
   "lng": -81.2779144,
@@ -567,6 +602,11 @@
   "lng": -81.245366,
   "precision": "house"
  },
+ "343 wharncliffe rd n": {
+  "lat": 42.9954868,
+  "lng": -81.2666697,
+  "precision": "house"
+ },
  "344 harvard street": {
   "lat": 42.9946861,
   "lng": -81.2458384,
@@ -580,6 +620,11 @@
  "354 windermere road": {
   "lat": 43.0157051,
   "lng": -81.2745461,
+  "precision": "house"
+ },
+ "355 wharncliffe road north": {
+  "lat": 42.9960701,
+  "lng": -81.2668284,
   "precision": "house"
  },
  "36 essex street, london on n6g 1b2": {
@@ -702,6 +747,11 @@
   "lng": -81.2510928,
   "precision": "house"
  },
+ "646 middlewoods drive": {
+  "lat": 43.000704,
+  "lng": -81.300498,
+  "precision": "house"
+ },
  "652 talbot": {
   "lat": 42.9904984,
   "lng": -81.2555247,
@@ -755,6 +805,11 @@
  "76 woodward ave": {
   "lat": 42.9865539,
   "lng": -81.2698652,
+  "precision": "house"
+ },
+ "795 richmond st": {
+  "lat": 42.996866,
+  "lng": -81.2540904,
   "precision": "house"
  },
  "8 cavendish crescent": {
@@ -816,6 +871,11 @@
   "precision": "house"
  },
  "974 western rd": {
+  "lat": 42.9962998,
+  "lng": -81.270483,
+  "precision": "house"
+ },
+ "974 western rd.": {
   "lat": 42.9962998,
   "lng": -81.270483,
   "precision": "house"
